@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SBUSD CAASPP Elementary Report</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:16px;background:#f5f5f7;color:#111}
+.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+h1{font-size:22px;margin:0 0 6px} h2{font-size:17px;margin:0 0 10px}
+.small{font-size:13px;color:#666}.warn{font-size:13px;color:#7a4b00;background:#fff4d6;border-radius:12px;padding:10px;margin-top:10px}
+label{font-weight:600;display:block;margin-top:12px}
+select,input{width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid #ccc;font-size:16px;margin-top:6px;background:#fff}
+table{width:100%;border-collapse:collapse} th,td{padding:10px 4px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
+th{font-size:12px;color:#666;text-transform:uppercase} canvas{width:100%;height:210px;display:block}
+.badge{display:inline-block;background:#eef4ff;color:#174ea6;border-radius:999px;padding:4px 10px;font-weight:600;font-size:13px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>SBUSD Elementary CAASPP</h1>
+  <div class="small">Offline single-file HTML. Data is embedded directly in the file.</div>
+  <div class="badge">ELA CAASPP percentages</div>
+  <div class="warn">Source captured from SB Reads / California Department of Education CAASPP page text. Math and tested-count fields are not included here because I did not have a clean source for those in this pass.</div>
+</div>
+
+<div class="card">
+  <h2>Controls</h2>
+  <label for="year">Year</label>
+  <select id="year">
+    <option value="2024-25">2024-25</option>
+    <option value="2023-24">2023-24</option>
+  </select>
+  <label for="search">Filter school</label>
+  <input id="search" type="search" placeholder="Type a school name">
+</div>
+
+<div class="card">
+  <h2>Chart</h2>
+  <canvas id="chart" aria-label="CAASPP chart"></canvas>
+</div>
+
+<div class="card">
+  <h2>Data</h2>
+  <table>
+    <thead><tr><th>School</th><th>Year</th><th>ELA Met/Exceeded</th><th>SED %</th><th>EL %</th></tr></thead>
+    <tbody id="rows">
+<tr data-year="2024-25" data-school="Adams Elementary"><td>Adams Elementary</td><td>2024-25</td><td>46.99%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Adelante Charter"><td>Adelante Charter</td><td>2024-25</td><td>30.07%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Cleveland Elementary"><td>Cleveland Elementary</td><td>2024-25</td><td>52.22%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Franklin Elementary"><td>Franklin Elementary</td><td>2024-25</td><td>30.47%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Harding University Partnership"><td>Harding University Partnership</td><td>2024-25</td><td>36.84%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="McKinley Elementary"><td>McKinley Elementary</td><td>2024-25</td><td>21.99%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Monroe Elementary"><td>Monroe Elementary</td><td>2024-25</td><td>50.28%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Peabody Charter"><td>Peabody Charter</td><td>2024-25</td><td>66.12%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Roosevelt Elementary"><td>Roosevelt Elementary</td><td>2024-25</td><td>46.99%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Santa Barbara Charter"><td>Santa Barbara Charter</td><td>2024-25</td><td>59.87%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Santa Barbara Community Academy"><td>Santa Barbara Community Academy</td><td>2024-25</td><td>28.33%</td><td>—</td><td>—</td></tr>
+<tr data-year="2024-25" data-school="Washington Elementary"><td>Washington Elementary</td><td>2024-25</td><td>57.79%</td><td>—</td><td>—</td></tr>
+
+<tr data-year="2023-24" data-school="Adams Elementary"><td>Adams Elementary</td><td>2023-24</td><td>51.87%</td><td>42.10%</td><td>18.66%</td></tr>
+<tr data-year="2023-24" data-school="Adelante Charter"><td>Adelante Charter</td><td>2023-24</td><td>52.44%</td><td>41.94%</td><td>24.56%</td></tr>
+<tr data-year="2023-24" data-school="Cleveland Elementary"><td>Cleveland Elementary</td><td>2023-24</td><td>35.82%</td><td>36.20%</td><td>7.69%</td></tr>
+<tr data-year="2023-24" data-school="Franklin Elementary"><td>Franklin Elementary</td><td>2023-24</td><td>50.62%</td><td>49.55%</td><td>16.40%</td></tr>
+<tr data-year="2023-24" data-school="Harding University Partnership"><td>Harding University Partnership</td><td>2023-24</td><td>48.93%</td><td>41.67%</td><td>22.22%</td></tr>
+<tr data-year="2023-24" data-school="McKinley Elementary"><td>McKinley Elementary</td><td>2023-24</td><td>20.63%</td><td>17.11%</td><td>1.49%</td></tr>
+<tr data-year="2023-24" data-school="Monroe Elementary"><td>Monroe Elementary</td><td>2023-24</td><td>43.11%</td><td>32.74%</td><td>10.71%</td></tr>
+<tr data-year="2023-24" data-school="Peabody Charter"><td>Peabody Charter</td><td>2023-24</td><td>71.42%</td><td>53.54%</td><td>7.32%</td></tr>
+<tr data-year="2023-24" data-school="Roosevelt Elementary"><td>Roosevelt Elementary</td><td>2023-24</td><td>53.99%</td><td>43.45%</td><td>0.00%</td></tr>
+<tr data-year="2023-24" data-school="Santa Barbara Charter"><td>Santa Barbara Charter</td><td>2023-24</td><td>59.09%</td><td>50.00%</td><td>0.00%</td></tr>
+<tr data-year="2023-24" data-school="Santa Barbara Community Academy"><td>Santa Barbara Community Academy</td><td>2023-24</td><td>32.58%</td><td>29.66%</td><td>7.41%</td></tr>
+<tr data-year="2023-24" data-school="Washington Elementary"><td>Washington Elementary</td><td>2023-24</td><td>62.06%</td><td>40.83%</td><td>7.69%</td></tr>
+    </tbody>
+  </table>
+  <div id="count" class="small"></div>
+</div>
+
+<script>
+const data = [
+["Adams Elementary","2024-25",46.99,null,null],["Adelante Charter","2024-25",30.07,null,null],["Cleveland Elementary","2024-25",52.22,null,null],["Franklin Elementary","2024-25",30.47,null,null],["Harding University Partnership","2024-25",36.84,null,null],["McKinley Elementary","2024-25",21.99,null,null],["Monroe Elementary","2024-25",50.28,null,null],["Peabody Charter","2024-25",66.12,null,null],["Roosevelt Elementary","2024-25",46.99,null,null],["Santa Barbara Charter","2024-25",59.87,null,null],["Santa Barbara Community Academy","2024-25",28.33,null,null],["Washington Elementary","2024-25",57.79,null,null],
+["Adams Elementary","2023-24",51.87,42.10,18.66],["Adelante Charter","2023-24",52.44,41.94,24.56],["Cleveland Elementary","2023-24",35.82,36.20,7.69],["Franklin Elementary","2023-24",50.62,49.55,16.40],["Harding University Partnership","2023-24",48.93,41.67,22.22],["McKinley Elementary","2023-24",20.63,17.11,1.49],["Monroe Elementary","2023-24",43.11,32.74,10.71],["Peabody Charter","2023-24",71.42,53.54,7.32],["Roosevelt Elementary","2023-24",53.99,43.45,0],["Santa Barbara Charter","2023-24",59.09,50,0],["Santa Barbara Community Academy","2023-24",32.58,29.66,7.41],["Washington Elementary","2023-24",62.06,40.83,7.69]
+];
+
+const year = document.getElementById("year");
+const search = document.getElementById("search");
+const tbody = document.getElementById("rows");
+const count = document.getElementById("count");
+const canvas = document.getElementById("chart");
+const ctx = canvas.getContext("2d");
+
+function pct(v){return v===null ? "—" : v.toFixed(2)+"%";}
+function filtered(){
+  const q = search.value.toLowerCase();
+  return data.filter(r => r[1] === year.value && r[0].toLowerCase().includes(q)).sort((a,b)=>b[2]-a[2]);
+}
+function table(items){
+  tbody.innerHTML = items.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${pct(r[2])}</td><td>${pct(r[3])}</td><td>${pct(r[4])}</td></tr>`).join("");
+  count.textContent = items.length + " row(s)";
+}
+function chart(items){
+  const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth, h = 210;
+  canvas.width = w*dpr; canvas.height = h*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h); ctx.font="11px -apple-system,BlinkMacSystemFont,sans-serif";
+  const left=34,right=w-8,top=10,bottom=h-50, plotW=right-left, plotH=bottom-top;
+  ctx.strokeStyle="#ddd"; ctx.fillStyle="#666"; ctx.lineWidth=1;
+  for(let p=0;p<=100;p+=25){const y=top+plotH*(1-p/100);ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillText(p+"",6,y+4);}
+  if(!items.length)return;
+  const barW = Math.max(8, plotW/items.length - 4);
+  items.forEach((r,i)=>{const x=left+i*(plotW/items.length)+2; const bh=plotH*(r[2]/100); const y=bottom-bh; ctx.fillStyle="#007aff"; ctx.fillRect(x,y,barW,bh); ctx.save(); ctx.translate(x+barW/2,bottom+4); ctx.rotate(-Math.PI/4); ctx.fillStyle="#333"; ctx.fillText(r[0].replace(" Elementary","").replace("Santa Barbara ","SB "),0,0); ctx.restore();});
+}
+function update(){const items=filtered(); table(items); chart(items);}
+year.addEventListener("change",update); search.addEventListener("input",update); window.addEventListener("resize",update); update();
+</script>
+</body>
+</html>
