@@ -1,115 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>SBUSD CAASPP Elementary Report</title>
+<title>SBUSD Elementary CAASPP</title>
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:16px;background:#f5f5f7;color:#111}
-.card{background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
-h1{font-size:22px;margin:0 0 6px} h2{font-size:17px;margin:0 0 10px}
-.small{font-size:13px;color:#666}.warn{font-size:13px;color:#7a4b00;background:#fff4d6;border-radius:12px;padding:10px;margin-top:10px}
-label{font-weight:600;display:block;margin-top:12px}
-select,input{width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid #ccc;font-size:16px;margin-top:6px;background:#fff}
-table{width:100%;border-collapse:collapse} th,td{padding:10px 4px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
-th{font-size:12px;color:#666;text-transform:uppercase} canvas{width:100%;height:210px;display:block}
-.badge{display:inline-block;background:#eef4ff;color:#174ea6;border-radius:999px;padding:4px 10px;font-weight:600;font-size:13px;margin-top:8px}
+:root{--bg:#f4f6fb;--card:#fff;--ink:#101828;--muted:#667085;--line:#e4e7ec;--blue:#2563eb;--blue2:#eff6ff;--orange:#f59e0b;--red:#b42318;--green:#047857;--shadow:0 10px 28px rgba(16,24,40,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.35}.page{max-width:1120px;margin:auto;padding:16px 16px 44px}.hero{background:linear-gradient(135deg,#0f172a,#1d4ed8);color:#fff;border-radius:26px;padding:24px 18px;box-shadow:var(--shadow);margin-bottom:14px}.hero h1{margin:0 0 8px;font-size:31px;line-height:1.02;letter-spacing:-.05em}.hero p{margin:0;color:rgba(255,255,255,.82);font-size:14px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.chip{font-size:12px;font-weight:800;border-radius:999px;padding:6px 10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.22)}.note{font-size:13px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:16px;padding:12px;margin:14px 0}.card{background:var(--card);border:1px solid rgba(228,231,236,.9);border-radius:22px;padding:16px;box-shadow:var(--shadow)}.card h2{font-size:17px;margin:0 0 12px;letter-spacing:-.02em}.controls{position:sticky;top:0;z-index:5;background:rgba(244,246,251,.86);backdrop-filter:blur(12px);padding:8px 0;margin:0 0 6px}.controlgrid{display:grid;gap:10px}label{display:block;font-size:12px;font-weight:850;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}select,input{width:100%;font-size:16px;padding:12px 13px;border:1px solid #d0d5dd;border-radius:14px;background:#fff;color:var(--ink)}.grid{display:grid;grid-template-columns:1fr;gap:14px}.wide{grid-column:1/-1}.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi{border:1px solid var(--line);border-radius:18px;background:#fafafa;padding:12px}.kpi.focus{background:var(--blue2);border-color:#bfdbfe}.kpi .label{font-size:12px;color:var(--muted);font-weight:800}.kpi .value{font-size:25px;font-weight:900;letter-spacing:-.045em;margin-top:4px}.kpi.focus .value{color:#1d4ed8}.kpi .sub{font-size:12px;color:var(--muted);margin-top:3px}.chartbox{height:330px}canvas{display:block;width:100%;height:330px}.ranklist{display:grid;gap:10px}.school{border:1px solid var(--line);border-radius:18px;padding:12px;background:#fff}.school.roosevelt{background:#eff6ff;border-color:#93c5fd}.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.name{font-weight:900;letter-spacing:-.02em}.score{font-size:21px;font-weight:950}.bar{height:10px;background:#eef2f7;border-radius:999px;overflow:hidden;margin:10px 0 7px}.bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#60a5fa,#2563eb)}.roosevelt .bar span{background:linear-gradient(90deg,#fbbf24,#f59e0b)}.meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)}.up{color:var(--green);font-weight:900}.down{color:var(--red);font-weight:900}.flat{color:var(--muted);font-weight:900}.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:#fff}table{width:100%;min-width:720px;border-collapse:collapse}th,td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;background:#f9fafb}tr:last-child td{border-bottom:0}.num{text-align:right;font-variant-numeric:tabular-nums}.muted{color:var(--muted)}.status,.footer{font-size:12px;color:var(--muted);margin:10px 2px}noscript .nos{display:block}.nos{display:none;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:16px;padding:12px;margin:12px 0;font-size:13px}
+@media(min-width:760px){.page{padding:26px}.hero{padding:32px}.hero h1{font-size:46px}.controlgrid{grid-template-columns:190px 1fr}.grid{grid-template-columns:1.05fr .95fr}.kpis{grid-template-columns:repeat(4,1fr)}.ranklist{grid-template-columns:1fr 1fr}.chartbox,canvas{height:390px}}
 </style>
 </head>
 <body>
-<div class="card">
-  <h1>SBUSD Elementary CAASPP</h1>
-  <div class="small">Offline single-file HTML. Data is embedded directly in the file.</div>
-  <div class="badge">ELA CAASPP percentages</div>
-  <div class="warn">Source captured from SB Reads / California Department of Education CAASPP page text. Math and tested-count fields are not included here because I did not have a clean source for those in this pass.</div>
+<div class="page">
+<section class="hero"><h1>SBUSD Elementary CAASPP</h1><p>ELA met/exceeded percentages, ranked by school, with Roosevelt called out.</p><div class="chips"><span class="chip">Phone-first</span><span class="chip">No libraries</span><span class="chip">GitHub Pages</span></div></section>
+<div class="note">Source note: this report uses the ELA percentages embedded in the original file. 2024-25 SED and English Learner subgroup fields were not available in that source pass, so those cells remain blank.</div>
+<div id="status" class="status">JavaScript has not run yet.</div><noscript><div class="nos">JavaScript is disabled. The static table is visible, but filters and charting require JavaScript.</div></noscript>
+<section class="controls"><div class="card"><div class="controlgrid"><div><label for="year">Year</label><select id="year"><option>2024-25</option><option>2023-24</option></select></div><div><label for="search">Filter school</label><input id="search" type="search" placeholder="Roosevelt, Peabody, Washington..."></div></div></div></section>
+<section class="card wide"><h2>Snapshot</h2><div id="kpis" class="kpis"></div></section>
+<main class="grid"><section class="card"><h2>Ranked chart</h2><div class="chartbox"><canvas id="chart"></canvas></div></section><section class="card"><h2>School ranking</h2><div id="ranklist" class="ranklist"></div></section><section class="card wide"><h2>Data table</h2><div class="tablewrap"><table><thead><tr><th>Rank</th><th>School</th><th>Year</th><th class="num">ELA</th><th class="num">Change vs 2023-24</th><th class="num">SED</th><th class="num">EL</th></tr></thead><tbody id="rows"><tr><td>—</td><td>Roosevelt Elementary</td><td>2024-25</td><td class="num">46.99%</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr></tbody></table></div></section></main>
+<div class="footer">Single-file HTML/CSS/JS. Opens cleanly from the hosted GitHub Pages URL, not from iOS Quick Look preview.</div>
 </div>
-
-<div class="card">
-  <h2>Controls</h2>
-  <label for="year">Year</label>
-  <select id="year">
-    <option value="2024-25">2024-25</option>
-    <option value="2023-24">2023-24</option>
-  </select>
-  <label for="search">Filter school</label>
-  <input id="search" type="search" placeholder="Type a school name">
-</div>
-
-<div class="card">
-  <h2>Chart</h2>
-  <canvas id="chart" aria-label="CAASPP chart"></canvas>
-</div>
-
-<div class="card">
-  <h2>Data</h2>
-  <table>
-    <thead><tr><th>School</th><th>Year</th><th>ELA Met/Exceeded</th><th>SED %</th><th>EL %</th></tr></thead>
-    <tbody id="rows">
-<tr data-year="2024-25" data-school="Adams Elementary"><td>Adams Elementary</td><td>2024-25</td><td>46.99%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Adelante Charter"><td>Adelante Charter</td><td>2024-25</td><td>30.07%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Cleveland Elementary"><td>Cleveland Elementary</td><td>2024-25</td><td>52.22%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Franklin Elementary"><td>Franklin Elementary</td><td>2024-25</td><td>30.47%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Harding University Partnership"><td>Harding University Partnership</td><td>2024-25</td><td>36.84%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="McKinley Elementary"><td>McKinley Elementary</td><td>2024-25</td><td>21.99%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Monroe Elementary"><td>Monroe Elementary</td><td>2024-25</td><td>50.28%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Peabody Charter"><td>Peabody Charter</td><td>2024-25</td><td>66.12%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Roosevelt Elementary"><td>Roosevelt Elementary</td><td>2024-25</td><td>46.99%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Santa Barbara Charter"><td>Santa Barbara Charter</td><td>2024-25</td><td>59.87%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Santa Barbara Community Academy"><td>Santa Barbara Community Academy</td><td>2024-25</td><td>28.33%</td><td>—</td><td>—</td></tr>
-<tr data-year="2024-25" data-school="Washington Elementary"><td>Washington Elementary</td><td>2024-25</td><td>57.79%</td><td>—</td><td>—</td></tr>
-
-<tr data-year="2023-24" data-school="Adams Elementary"><td>Adams Elementary</td><td>2023-24</td><td>51.87%</td><td>42.10%</td><td>18.66%</td></tr>
-<tr data-year="2023-24" data-school="Adelante Charter"><td>Adelante Charter</td><td>2023-24</td><td>52.44%</td><td>41.94%</td><td>24.56%</td></tr>
-<tr data-year="2023-24" data-school="Cleveland Elementary"><td>Cleveland Elementary</td><td>2023-24</td><td>35.82%</td><td>36.20%</td><td>7.69%</td></tr>
-<tr data-year="2023-24" data-school="Franklin Elementary"><td>Franklin Elementary</td><td>2023-24</td><td>50.62%</td><td>49.55%</td><td>16.40%</td></tr>
-<tr data-year="2023-24" data-school="Harding University Partnership"><td>Harding University Partnership</td><td>2023-24</td><td>48.93%</td><td>41.67%</td><td>22.22%</td></tr>
-<tr data-year="2023-24" data-school="McKinley Elementary"><td>McKinley Elementary</td><td>2023-24</td><td>20.63%</td><td>17.11%</td><td>1.49%</td></tr>
-<tr data-year="2023-24" data-school="Monroe Elementary"><td>Monroe Elementary</td><td>2023-24</td><td>43.11%</td><td>32.74%</td><td>10.71%</td></tr>
-<tr data-year="2023-24" data-school="Peabody Charter"><td>Peabody Charter</td><td>2023-24</td><td>71.42%</td><td>53.54%</td><td>7.32%</td></tr>
-<tr data-year="2023-24" data-school="Roosevelt Elementary"><td>Roosevelt Elementary</td><td>2023-24</td><td>53.99%</td><td>43.45%</td><td>0.00%</td></tr>
-<tr data-year="2023-24" data-school="Santa Barbara Charter"><td>Santa Barbara Charter</td><td>2023-24</td><td>59.09%</td><td>50.00%</td><td>0.00%</td></tr>
-<tr data-year="2023-24" data-school="Santa Barbara Community Academy"><td>Santa Barbara Community Academy</td><td>2023-24</td><td>32.58%</td><td>29.66%</td><td>7.41%</td></tr>
-<tr data-year="2023-24" data-school="Washington Elementary"><td>Washington Elementary</td><td>2023-24</td><td>62.06%</td><td>40.83%</td><td>7.69%</td></tr>
-    </tbody>
-  </table>
-  <div id="count" class="small"></div>
-</div>
-
 <script>
-const data = [
-["Adams Elementary","2024-25",46.99,null,null],["Adelante Charter","2024-25",30.07,null,null],["Cleveland Elementary","2024-25",52.22,null,null],["Franklin Elementary","2024-25",30.47,null,null],["Harding University Partnership","2024-25",36.84,null,null],["McKinley Elementary","2024-25",21.99,null,null],["Monroe Elementary","2024-25",50.28,null,null],["Peabody Charter","2024-25",66.12,null,null],["Roosevelt Elementary","2024-25",46.99,null,null],["Santa Barbara Charter","2024-25",59.87,null,null],["Santa Barbara Community Academy","2024-25",28.33,null,null],["Washington Elementary","2024-25",57.79,null,null],
-["Adams Elementary","2023-24",51.87,42.10,18.66],["Adelante Charter","2023-24",52.44,41.94,24.56],["Cleveland Elementary","2023-24",35.82,36.20,7.69],["Franklin Elementary","2023-24",50.62,49.55,16.40],["Harding University Partnership","2023-24",48.93,41.67,22.22],["McKinley Elementary","2023-24",20.63,17.11,1.49],["Monroe Elementary","2023-24",43.11,32.74,10.71],["Peabody Charter","2023-24",71.42,53.54,7.32],["Roosevelt Elementary","2023-24",53.99,43.45,0],["Santa Barbara Charter","2023-24",59.09,50,0],["Santa Barbara Community Academy","2023-24",32.58,29.66,7.41],["Washington Elementary","2023-24",62.06,40.83,7.69]
-];
-
-const year = document.getElementById("year");
-const search = document.getElementById("search");
-const tbody = document.getElementById("rows");
-const count = document.getElementById("count");
-const canvas = document.getElementById("chart");
-const ctx = canvas.getContext("2d");
-
-function pct(v){return v===null ? "—" : v.toFixed(2)+"%";}
-function filtered(){
-  const q = search.value.toLowerCase();
-  return data.filter(r => r[1] === year.value && r[0].toLowerCase().includes(q)).sort((a,b)=>b[2]-a[2]);
-}
-function table(items){
-  tbody.innerHTML = items.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${pct(r[2])}</td><td>${pct(r[3])}</td><td>${pct(r[4])}</td></tr>`).join("");
-  count.textContent = items.length + " row(s)";
-}
-function chart(items){
-  const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth, h = 210;
-  canvas.width = w*dpr; canvas.height = h*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,w,h); ctx.font="11px -apple-system,BlinkMacSystemFont,sans-serif";
-  const left=34,right=w-8,top=10,bottom=h-50, plotW=right-left, plotH=bottom-top;
-  ctx.strokeStyle="#ddd"; ctx.fillStyle="#666"; ctx.lineWidth=1;
-  for(let p=0;p<=100;p+=25){const y=top+plotH*(1-p/100);ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillText(p+"",6,y+4);}
-  if(!items.length)return;
-  const barW = Math.max(8, plotW/items.length - 4);
-  items.forEach((r,i)=>{const x=left+i*(plotW/items.length)+2; const bh=plotH*(r[2]/100); const y=bottom-bh; ctx.fillStyle="#007aff"; ctx.fillRect(x,y,barW,bh); ctx.save(); ctx.translate(x+barW/2,bottom+4); ctx.rotate(-Math.PI/4); ctx.fillStyle="#333"; ctx.fillText(r[0].replace(" Elementary","").replace("Santa Barbara ","SB "),0,0); ctx.restore();});
-}
-function update(){const items=filtered(); table(items); chart(items);}
-year.addEventListener("change",update); search.addEventListener("input",update); window.addEventListener("resize",update); update();
+const data=[['Adams Elementary','2024-25',46.99,null,null],['Adelante Charter','2024-25',30.07,null,null],['Cleveland Elementary','2024-25',52.22,null,null],['Franklin Elementary','2024-25',30.47,null,null],['Harding University Partnership','2024-25',36.84,null,null],['McKinley Elementary','2024-25',21.99,null,null],['Monroe Elementary','2024-25',50.28,null,null],['Peabody Charter','2024-25',66.12,null,null],['Roosevelt Elementary','2024-25',46.99,null,null],['Santa Barbara Charter','2024-25',59.87,null,null],['Santa Barbara Community Academy','2024-25',28.33,null,null],['Washington Elementary','2024-25',57.79,null,null],['Adams Elementary','2023-24',51.87,42.10,18.66],['Adelante Charter','2023-24',52.44,41.94,24.56],['Cleveland Elementary','2023-24',35.82,36.20,7.69],['Franklin Elementary','2023-24',50.62,49.55,16.40],['Harding University Partnership','2023-24',48.93,41.67,22.22],['McKinley Elementary','2023-24',20.63,17.11,1.49],['Monroe Elementary','2023-24',43.11,32.74,10.71],['Peabody Charter','2023-24',71.42,53.54,7.32],['Roosevelt Elementary','2023-24',53.99,43.45,0],['Santa Barbara Charter','2023-24',59.09,50,0],['Santa Barbara Community Academy','2023-24',32.58,29.66,7.41],['Washington Elementary','2023-24',62.06,40.83,7.69]].map(r=>({school:r[0],year:r[1],ela:r[2],sed:r[3],el:r[4]}));
+const $=id=>document.getElementById(id),year=$('year'),search=$('search'),rows=$('rows'),kpis=$('kpis'),ranklist=$('ranklist'),canvas=$('chart'),ctx=canvas.getContext('2d');$('status').textContent='JavaScript running. Filters, cards, and chart are active.';
+function pct(v){return v==null?'—':v.toFixed(2)+'%'}function prev(s){return data.find(r=>r.school===s&&r.year==='2023-24')}function delta(r){let p=prev(r.school);return p&&r.year!=='2023-24'?r.ela-p.ela:null}function dtext(d){return d==null?'—':(d>0?'+':'')+d.toFixed(2)+' pts'}function dcls(d){return d==null?'flat':d>0?'up':d<0?'down':'flat'}function short(s){return s.replace(' Elementary','').replace('Santa Barbara ','SB ').replace('University Partnership','UP').replace('Community Academy','Community')}function allForYear(){return data.filter(r=>r.year===year.value).sort((a,b)=>b.ela-a.ela)}function filtered(){let q=search.value.trim().toLowerCase();return allForYear().filter(r=>r.school.toLowerCase().includes(q))}
+function renderKpis(){let all=allForYear(),roos=all.find(r=>r.school==='Roosevelt Elementary'),avg=all.reduce((a,r)=>a+r.ela,0)/all.length,top=all[0],med=[...all].sort((a,b)=>a.ela-b.ela)[Math.floor(all.length/2)],rank=all.findIndex(r=>r.school==='Roosevelt Elementary')+1,d=roos?delta(roos):null;kpis.innerHTML=`<div class="kpi focus"><div class="label">Roosevelt</div><div class="value">${roos?pct(roos.ela):'—'}</div><div class="sub">Rank ${rank} of ${all.length} · <span class="${dcls(d)}">${dtext(d)}</span></div></div><div class="kpi"><div class="label">Listed avg</div><div class="value">${avg.toFixed(2)}%</div><div class="sub">Simple average</div></div><div class="kpi"><div class="label">Highest</div><div class="value">${pct(top.ela)}</div><div class="sub">${top.school}</div></div><div class="kpi"><div class="label">Median</div><div class="value">${pct(med.ela)}</div><div class="sub">${med.school}</div></div>`}
+function renderCards(arr){ranklist.innerHTML=arr.map((r,i)=>{let d=delta(r),ro=r.school==='Roosevelt Elementary';return `<div class="school ${ro?'roosevelt':''}"><div class="top"><div><div class="name">#${i+1} ${r.school}</div><div class="muted" style="font-size:12px">${r.year}</div></div><div class="score">${pct(r.ela)}</div></div><div class="bar"><span style="width:${Math.max(1,r.ela)}%"></span></div><div class="meta"><span>SED ${pct(r.sed)} · EL ${pct(r.el)}</span><span class="${dcls(d)}">${dtext(d)}</span></div></div>`}).join('')||'<div class="muted">No matching schools.</div>'}
+function renderTable(arr){rows.innerHTML=arr.map((r,i)=>{let d=delta(r);return `<tr><td>${i+1}</td><td>${r.school}</td><td>${r.year}</td><td class="num">${pct(r.ela)}</td><td class="num ${dcls(d)}">${dtext(d)}</td><td class="num">${pct(r.sed)}</td><td class="num">${pct(r.el)}</td></tr>`}).join('')||'<tr><td colspan="7" class="muted">No matching schools.</td></tr>'}
+function renderChart(arr){let rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1,w=Math.max(320,Math.floor(rect.width)),h=Math.floor(rect.height||330);canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);let left=38,right=w-8,top=16,bottom=h-82,plotW=right-left,plotH=bottom-top;ctx.font='12px -apple-system,BlinkMacSystemFont,sans-serif';ctx.lineWidth=1;ctx.strokeStyle='#e5e7eb';ctx.fillStyle='#667085';for(let p=0;p<=100;p+=25){let y=top+plotH*(1-p/100);ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();ctx.fillText(p+'%',4,y+4)}if(!arr.length)return;let step=plotW/arr.length,barW=Math.max(10,Math.min(42,step-6));arr.forEach((r,i)=>{let x=left+i*step+(step-barW)/2,bh=plotH*(r.ela/100),y=bottom-bh;ctx.fillStyle=r.school==='Roosevelt Elementary'?'#f59e0b':'#2563eb';ctx.fillRect(x,y,barW,bh);ctx.fillStyle='#475467';ctx.font='10px -apple-system,BlinkMacSystemFont,sans-serif';ctx.fillText(Math.round(r.ela),x,y-5);ctx.fillStyle='#111827';ctx.font='11px -apple-system,BlinkMacSystemFont,sans-serif';ctx.save();ctx.translate(x+barW/2,bottom+10);ctx.rotate(-Math.PI/4);ctx.fillText(short(r.school),0,0);ctx.restore()})}
+function update(){let arr=filtered();renderKpis();renderCards(arr);renderTable(arr);renderChart(arr)}year.addEventListener('change',update);search.addEventListener('input',update);window.addEventListener('resize',()=>requestAnimationFrame(update));update();
 </script>
 </body>
 </html>
