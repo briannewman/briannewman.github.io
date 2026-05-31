@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Corrected stock and income ETF return analysis for Jan. 1, 2026 through May 29, 2026.">
-  <title>Corrected Stock and Income ETF Analysis</title>
+  <meta name="description" content="Stock and income ETF return analysis for Jan. 1, 2026 through May 29, 2026.">
+  <title>Stock and Income ETF Analysis</title>
   <style>
     :root {
       color-scheme: light;
@@ -312,21 +312,6 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .corrections {
-      display: grid;
-      gap: 12px;
-    }
-
-    .correction {
-      display: grid;
-      grid-template-columns: 86px minmax(0, 1fr);
-      gap: 14px;
-      padding: 16px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-    }
-
     .ticker {
       display: inline-flex;
       align-items: center;
@@ -338,16 +323,6 @@
       color: var(--navy);
       font-weight: 840;
       letter-spacing: 0.04em;
-    }
-
-    .correction h3 {
-      margin: 0 0 5px;
-      font-size: 1rem;
-    }
-
-    .correction p {
-      margin: 0;
-      color: var(--muted);
     }
 
     .verdict {
@@ -419,9 +394,6 @@
         gap: 8px;
       }
 
-      .correction {
-        grid-template-columns: 1fr;
-      }
     }
   </style>
 </head>
@@ -429,13 +401,13 @@
   <header>
     <div class="page hero">
       <div>
-        <p class="eyebrow">Corrected static report</p>
+        <p class="eyebrow">Static performance report</p>
         <h1>Stock and Income ETF Analysis</h1>
-        <p class="dek">A corrected review of GOOG, GOOW, TSLA, TSLW, YMAG, and YQQQ for Jan. 1, 2026 through May 29, 2026, using the tickers originally provided and a consistent cash total return method.</p>
+        <p class="dek">A review of GOOG, GOOW, TSLA, TSLW, YMAG, and YQQQ for Jan. 1, 2026 through May 29, 2026, using the tickers provided and a consistent cash total return method.</p>
       </div>
       <aside class="hero-note" aria-label="Key finding">
-        <strong>Key correction</strong>
-        <p>GOOW and TSLW are Roundhill WeeklyPay funds, not YieldMax covered-call ETFs. YQQQ is a short Nasdaq-100 option-income strategy, not broad long-tech exposure.</p>
+        <strong>Key finding</strong>
+        <p>GOOW narrowly led the group by cash total return, while distributions helped offset price declines in YMAG, TSLW, and YQQQ.</p>
       </aside>
     </div>
   </header>
@@ -472,7 +444,7 @@
 
     <section aria-labelledby="returns-title">
       <div class="section-title">
-        <h2 id="returns-title">Corrected Return Table</h2>
+        <h2 id="returns-title">Return Table</h2>
       </div>
       <div class="table-wrap">
         <table>
@@ -585,77 +557,41 @@
       </div>
     </section>
 
-    <section aria-labelledby="corrections-title">
-      <div class="section-title">
-        <h2 id="corrections-title">Product Corrections</h2>
-      </div>
-      <div class="corrections">
-        <article class="correction">
-          <div><span class="ticker">GOOW</span></div>
-          <div>
-            <h3>Roundhill GOOGL WeeklyPay ETF</h3>
-            <p>Targets weekly distributions plus 120% of Alphabet/GOOGL calendar-week total return before fees and expenses. Covered-call language is not appropriate because Roundhill says WeeklyPay ETFs do not sell options.</p>
-          </div>
-        </article>
-        <article class="correction">
-          <div><span class="ticker">TSLW</span></div>
-          <div>
-            <h3>Roundhill TSLA WeeklyPay ETF</h3>
-            <p>Targets weekly distributions plus 120% of Tesla calendar-week total return before fees and expenses. The corrected explanation is leveraged weekly exposure plus distributions, not option-premium covered calls.</p>
-          </div>
-        </article>
-        <article class="correction">
-          <div><span class="ticker">YMAG</span></div>
-          <div>
-            <h3>YieldMax Magnificent 7 Fund of Option Income ETF</h3>
-            <p>Best described as a fund of funds holding YieldMax option-income ETFs tied to the Magnificent 7. Covered-call framing belongs to the underlying funds, not direct holdings of the raw stocks.</p>
-          </div>
-        </article>
-        <article class="correction">
-          <div><span class="ticker">YQQQ</span></div>
-          <div>
-            <h3>YieldMax Short N100 Option Income Strategy ETF</h3>
-            <p>Short/inverse Nasdaq-100-oriented option-income exposure. It should not be described as broad long-tech income, and its weakness during a tech rally is consistent with its product design.</p>
-          </div>
-        </article>
-      </div>
-    </section>
-
     <section aria-labelledby="takeaways-title">
       <div class="section-title">
-        <h2 id="takeaways-title">Rewritten Takeaways</h2>
+        <h2 id="takeaways-title">Takeaways</h2>
       </div>
       <div class="grid-2">
         <article class="panel winner">
           <h3>GOOG vs. GOOW</h3>
           <p>GOOG returned about +19.45% including its March dividend. GOOW rose only +5.83% on price, but $10.33084 in distributions lifted cash total return to +20.30%.</p>
-          <p>GOOW narrowly wins this period, but the reason is not covered-call upside capture. The right framing is WeeklyPay structure, leveraged weekly exposure, distributions, path dependency, and return of capital risk.</p>
+          <p>GOOW narrowly wins this period. Its result reflects WeeklyPay structure, leveraged weekly exposure, distributions, path dependency, and return of capital risk.</p>
         </article>
         <article class="panel">
           <h3>TSLA vs. TSLW</h3>
           <p>TSLA was nearly flat at -0.52%. TSLW fell -19.08% on price, and its $4.88934 in distributions reduced the loss to -3.96%.</p>
-          <p>The original positive TSLW return does not reconcile with the corrected price and distribution data. TSLW helped versus its own price decline but still trailed TSLA.</p>
+          <p>TSLW helped versus its own price decline but still trailed TSLA on total return.</p>
         </article>
         <article class="panel">
           <h3>YMAG</h3>
           <p>YMAG declined -8.64% on price, but $2.10180 in distributions lifted cash total return to +6.25%.</p>
-          <p>The corrected description is diversified YieldMax option-income fund-of-funds exposure, not raw Magnificent 7 equity exposure.</p>
+          <p>This is diversified YieldMax option-income fund-of-funds exposure rather than raw Magnificent 7 equity exposure.</p>
         </article>
         <article class="panel">
           <h3>YQQQ</h3>
           <p>YQQQ declined -18.06% on price. Distributions reduced the loss, but cash total return remained negative at -7.65%.</p>
-          <p>That result fits a strong tech tape because YQQQ is short Nasdaq-100-oriented, not broad long Nasdaq income exposure.</p>
+          <p>That result fits a strong tech tape because YQQQ is short Nasdaq-100-oriented.</p>
         </article>
       </div>
     </section>
 
     <section aria-labelledby="conclusion-title">
       <div class="section-title">
-        <h2 id="conclusion-title">Corrected Conclusion</h2>
+        <h2 id="conclusion-title">Conclusion</h2>
       </div>
       <div class="panel">
-        <p>Using the tickers provided, this is not a pure raw-stock versus covered-call comparison. It is a comparison between raw equity exposure, Roundhill WeeklyPay leveraged distribution ETFs, a YieldMax fund of funds, and a short Nasdaq-100 option-income ETF.</p>
-        <p>For the two direct pairs shown, GOOW narrowly beat GOOG by cash total return, while TSLA beat TSLW. The original "raw equities won 5 of 6" statement should be removed unless the other four matchups are recalculated with the same method.</p>
+        <p>Using the tickers provided, this analysis compares raw equity exposure, Roundhill WeeklyPay leveraged distribution ETFs, a YieldMax fund of funds, and a short Nasdaq-100 option-income ETF.</p>
+        <p>For the two direct pairs shown, GOOW narrowly beat GOOG by cash total return, while TSLA beat TSLW. Across the standalone funds, YMAG produced a positive distribution-supported return and YQQQ remained negative in a strong tech tape.</p>
       </div>
     </section>
 
