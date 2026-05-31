@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Stock and income ETF return analysis for Jan. 1, 2025 through May 29, 2025.">
+  <title>Stock and Income ETF Analysis - 2025</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #192235;
+      --muted: #5d6878;
+      --line: #d9e0ea;
+      --panel: #ffffff;
+      --page: #f6f8fb;
+      --navy: #243b67;
+      --teal: #0b766b;
+      --green: #19724f;
+      --red: #b83a3a;
+      --amber: #a06412;
+      --blue-soft: #eaf1ff;
+      --teal-soft: #e7f6f3;
+      --red-soft: #fff0f0;
+      --shadow: 0 18px 45px rgba(24, 33, 47, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    a {
+      color: #2257a6;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.75fr);
+      gap: 24px;
+      align-items: end;
+      padding: 52px 0 34px;
+    }
+
+    .eyebrow {
+      color: var(--teal);
+      font-size: 0.8rem;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      margin: 0 0 10px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: clamp(2.25rem, 4.5vw, 4.45rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+      margin: 0 0 18px;
+      max-width: 880px;
+    }
+
+    .dek {
+      color: var(--muted);
+      font-size: 1.08rem;
+      max-width: 790px;
+      margin: 0;
+    }
+
+    .hero-note {
+      background: var(--navy);
+      color: #ffffff;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .hero-note strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .hero-note p {
+      color: #dce7fb;
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    main { padding: 28px 0 58px; }
+
+    section { margin: 0 0 28px; }
+
+    .section-title {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      font-size: 1.45rem;
+      letter-spacing: 0;
+      margin: 0;
+    }
+
+    .method {
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin: 0;
+      max-width: 780px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      min-height: 140px;
+      padding: 18px;
+    }
+
+    .card .label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      margin-bottom: 9px;
+      text-transform: uppercase;
+    }
+
+    .card .value {
+      font-size: 1.55rem;
+      font-weight: 820;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin: 0;
+    }
+
+    .positive { color: var(--green); }
+    .negative { color: var(--red); }
+    .neutral { color: var(--amber); }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .panel h3 {
+      font-size: 1.05rem;
+      margin: 0 0 12px;
+    }
+
+    .panel p {
+      color: var(--muted);
+      margin: 0 0 12px;
+    }
+
+    .panel p:last-child { margin-bottom: 0; }
+
+    .table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      min-width: 1080px;
+      width: 100%;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      text-align: right;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #eef3fb;
+      color: #334056;
+      font-size: 0.78rem;
+      font-weight: 760;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    td:first-child, th:first-child,
+    td:nth-child(2), th:nth-child(2),
+    td:last-child, th:last-child {
+      text-align: left;
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+
+    .ticker {
+      color: var(--ink);
+      font-weight: 820;
+    }
+
+    .status {
+      border-radius: 999px;
+      display: inline-flex;
+      font-size: 0.76rem;
+      font-weight: 760;
+      padding: 3px 9px;
+      white-space: nowrap;
+    }
+
+    .status.full { background: var(--teal-soft); color: var(--teal); }
+    .status.partial { background: #fff5e8; color: var(--amber); }
+    .status.none { background: var(--red-soft); color: var(--red); }
+
+    .note-list {
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+
+    .note-list li { margin-bottom: 6px; }
+
+    footer {
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 22px 0 34px;
+    }
+
+    @media (max-width: 900px) {
+      .hero, .grid-2 { grid-template-columns: 1fr; }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .section-title { align-items: start; flex-direction: column; }
+    }
+
+    @media (max-width: 620px) {
+      .page { width: min(100% - 24px, 1180px); }
+      .cards { grid-template-columns: 1fr; }
+      .hero { padding-top: 36px; }
+      .card { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page hero">
+      <div>
+        <p class="eyebrow">Jan. 1-May 29, 2025</p>
+        <h1>Stock and Income ETF Analysis - 2025</h1>
+        <p class="dek">A cash-return comparison of the provided stock, index, and income ETF tickers. Full-window securities start at the Jan. 2, 2025 close; newer ETFs start on their first available trading date inside the window.</p>
+      </div>
+      <div class="hero-note">
+        <strong>Method</strong>
+        <p>Total return here is price change plus cash distributions received during the measured window. It does not assume reinvestment, tax effects, or intraday execution.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section>
+      <div class="cards">
+        <div class="card">
+          <div class="label">Best covered return</div>
+          <div class="value positive">PLTR +62.68%</div>
+          <p>Palantir was the dominant winner among covered tickers, far ahead of its partial-period income ETF counterpart.</p>
+        </div>
+        <div class="card">
+          <div class="label">Comparable pair score</div>
+          <div class="value neutral">Raw 4 / ETF 0</div>
+          <p>Only four option-income pair comparisons had both sides trading in-window, and raw equity won all four.</p>
+        </div>
+        <div class="card">
+          <div class="label">Top partial-period ETF</div>
+          <div class="value positive">CHPY +29.38%</div>
+          <p>CHPY only covered Apr. 8-May 29, so this was a short-window result rather than a full semester result.</p>
+        </div>
+        <div class="card">
+          <div class="label">No 2025 coverage</div>
+          <div class="value negative">GOOW, GDXW</div>
+          <p>These two listed after the May 29 cutoff and cannot be measured for the requested period.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="panel">
+        <h3>What changed versus 2026</h3>
+        <p>The early-2025 window was much less favorable for the weekly option-income wrappers. PLTR and GDX were strong raw winners, while TSLA, NVDA, COIN, and PLTR all beat their available Roundhill counterparts on the cash-return method.</p>
+        <p>The option ETFs still produced large cash distributions, but those payments did not fully offset price decay in TSLW, NVDW, and COIW. PLTW had a positive cash return, but it was overwhelmed by PLTR's raw equity rally.</p>
+      </div>
+      <div class="panel">
+        <h3>Coverage caveats</h3>
+        <p>GOOW and GDXW did not exist during the Jan. 1-May 29, 2025 window. TSLW, NVDW, COIW, and PLTW are partial-period from Feb. 19, 2025. CHPY is partial-period from Apr. 8, 2025.</p>
+        <p>Current tickers are used throughout. In the 2025 trading window, TSLW and NVDW corresponded to earlier Roundhill tickers TSW and NVW, while MAGC traded as the renamed China Dragons strategy later in 2025.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>Pair Takeaways</h2>
+        <p class="method">The pair score excludes GOOG/GOOW and GDX/GDXW because the income ETF side had no in-window trading data.</p>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <h3>GOOG vs. GOOW</h3>
+          <p>GOOG finished down 9.16% on the cash-return method, helped only slightly by a $0.20 dividend. GOOW launched after the period, so there is no valid Jan.-May 2025 counterpart comparison.</p>
+        </div>
+        <div class="panel">
+          <h3>TSLA vs. TSLW</h3>
+          <p>TSLA lost 5.50%. TSLW produced $5.27 of distributions from Mar. 3 through May 27, but its partial-period cash return was still -7.31% after the share price fell from $51.35 to $42.33.</p>
+        </div>
+        <div class="panel">
+          <h3>NVDA vs. NVDW</h3>
+          <p>NVDA was almost flat but slightly positive at +0.64%. NVDW paid $4.42 in distributions, yet the partial-period cash return was -4.82% because the ETF price dropped from $49.89 to $43.06.</p>
+        </div>
+        <div class="panel">
+          <h3>COIN vs. COIW</h3>
+          <p>COIN declined 3.25%. COIW's high distributions, totaling $5.12, were not enough to offset its deeper price slide, leaving a partial-period cash return of -11.32%.</p>
+        </div>
+        <div class="panel">
+          <h3>PLTR vs. PLTW</h3>
+          <p>PLTR was the runaway winner at +62.68%. PLTW still managed a positive +4.02% cash return after $5.72 in distributions, but it captured only a small fraction of the raw equity move.</p>
+        </div>
+        <div class="panel">
+          <h3>GDX vs. GDXW</h3>
+          <p>GDX rose 42.28% with no in-window distribution. GDXW launched after the cutoff, so there is no valid 2025 counterpart comparison.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>Return Table</h2>
+        <p class="method">Cash total return = (end close + cash distributions - start close) / start close. Rows marked no coverage are excluded from ranked comparisons.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th>Coverage</th>
+              <th>Start Date</th>
+              <th>Start Close</th>
+              <th>End Close</th>
+              <th>Cash Dist.</th>
+              <th>Price Return</th>
+              <th>Cash Total Return</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="ticker">GOOG</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$190.63</td>
+              <td>$172.96</td>
+              <td>$0.20</td>
+              <td class="negative">-9.27%</td>
+              <td class="negative">-9.16%</td>
+              <td>Alphabet Class C, ordinary dividend included.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">GOOW</span></td>
+              <td><span class="status none">No coverage</span></td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>Launched after the May 29 cutoff.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">TSLA</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$379.28</td>
+              <td>$358.43</td>
+              <td>$0.00</td>
+              <td class="negative">-5.50%</td>
+              <td class="negative">-5.50%</td>
+              <td>No ordinary dividend.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">TSLW</span></td>
+              <td><span class="status partial">Partial</span></td>
+              <td>2025-02-19</td>
+              <td>$51.35</td>
+              <td>$42.33</td>
+              <td>$5.27</td>
+              <td class="negative">-17.57%</td>
+              <td class="negative">-7.31%</td>
+              <td>Distributions from Mar. 3-May 27.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">NVDA</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$138.31</td>
+              <td>$139.19</td>
+              <td>$0.01</td>
+              <td class="positive">+0.64%</td>
+              <td class="positive">+0.64%</td>
+              <td>Ordinary dividend included.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">NVDW</span></td>
+              <td><span class="status partial">Partial</span></td>
+              <td>2025-02-19</td>
+              <td>$49.89</td>
+              <td>$43.06</td>
+              <td>$4.42</td>
+              <td class="negative">-13.69%</td>
+              <td class="negative">-4.82%</td>
+              <td>Distributions from Mar. 3-May 27.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">COIN</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$257.21</td>
+              <td>$248.84</td>
+              <td>$0.00</td>
+              <td class="negative">-3.25%</td>
+              <td class="negative">-3.25%</td>
+              <td>No ordinary dividend.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">COIW</span></td>
+              <td><span class="status partial">Partial</span></td>
+              <td>2025-02-19</td>
+              <td>$48.85</td>
+              <td>$38.20</td>
+              <td>$5.12</td>
+              <td class="negative">-21.80%</td>
+              <td class="negative">-11.32%</td>
+              <td>Distributions from Mar. 3-May 27.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">PLTR</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$75.19</td>
+              <td>$122.32</td>
+              <td>$0.00</td>
+              <td class="positive">+62.68%</td>
+              <td class="positive">+62.68%</td>
+              <td>No ordinary dividend.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">PLTW</span></td>
+              <td><span class="status partial">Partial</span></td>
+              <td>2025-02-19</td>
+              <td>$44.24</td>
+              <td>$40.30</td>
+              <td>$5.72</td>
+              <td class="negative">-8.91%</td>
+              <td class="positive">+4.02%</td>
+              <td>Distributions from Mar. 3-May 27.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">GDX</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$35.34</td>
+              <td>$50.28</td>
+              <td>$0.00</td>
+              <td class="positive">+42.28%</td>
+              <td class="positive">+42.28%</td>
+              <td>No Jan.-May 2025 distribution.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">GDXW</span></td>
+              <td><span class="status none">No coverage</span></td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>n/a</td>
+              <td>Launched after the May 29 cutoff.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">YMAG</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$19.18</td>
+              <td>$15.42</td>
+              <td>$3.16</td>
+              <td class="negative">-19.60%</td>
+              <td class="negative">-3.11%</td>
+              <td>Weekly/monthly cash distributions included.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">YQQQ</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$17.53</td>
+              <td>$14.99</td>
+              <td>$1.96</td>
+              <td class="negative">-14.49%</td>
+              <td class="negative">-3.28%</td>
+              <td>Monthly cash distributions included.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">CHPY</span></td>
+              <td><span class="status partial">Partial</span></td>
+              <td>2025-04-08</td>
+              <td>$41.65</td>
+              <td>$51.01</td>
+              <td>$2.87</td>
+              <td class="positive">+22.47%</td>
+              <td class="positive">+29.38%</td>
+              <td>Short window from first available trading data.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">MAGC</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$21.04</td>
+              <td>$25.24</td>
+              <td>$0.00</td>
+              <td class="positive">+19.96%</td>
+              <td class="positive">+19.96%</td>
+              <td>No Jan.-May 2025 distribution.</td>
+            </tr>
+            <tr>
+              <td><span class="ticker">OZEM</span></td>
+              <td><span class="status full">Full</span></td>
+              <td>2025-01-02</td>
+              <td>$24.43</td>
+              <td>$24.63</td>
+              <td>$0.00</td>
+              <td class="positive">+0.82%</td>
+              <td class="positive">+0.82%</td>
+              <td>No Jan.-May 2025 distribution.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h3>Sources and Verification</h3>
+        <p>Price rows were verified from Yahoo Finance chart history by the price-check subagent. Distribution rows were verified from StockAnalysis dividend pages and current issuer pages by the distribution-check subagent. StockAnalysis history and dividend pages were also fetched locally on May 31, 2026 for issuer names, inception dates, and distribution records.</p>
+        <ul class="note-list">
+          <li>StockAnalysis ticker pages: <a href="https://stockanalysis.com/stocks/goog/">GOOG</a>, <a href="https://stockanalysis.com/stocks/tsla/">TSLA</a>, <a href="https://stockanalysis.com/stocks/nvda/">NVDA</a>, <a href="https://stockanalysis.com/stocks/coin/">COIN</a>, <a href="https://stockanalysis.com/stocks/pltr/">PLTR</a>, <a href="https://stockanalysis.com/etf/gdx/">GDX</a>.</li>
+          <li>ETF pages: <a href="https://stockanalysis.com/etf/goow/">GOOW</a>, <a href="https://stockanalysis.com/etf/tslw/">TSLW</a>, <a href="https://stockanalysis.com/etf/nvdw/">NVDW</a>, <a href="https://stockanalysis.com/etf/coiw/">COIW</a>, <a href="https://stockanalysis.com/etf/pltw/">PLTW</a>, <a href="https://stockanalysis.com/etf/gdxw/">GDXW</a>, <a href="https://stockanalysis.com/etf/ymag/">YMAG</a>, <a href="https://stockanalysis.com/etf/yqqq/">YQQQ</a>, <a href="https://stockanalysis.com/etf/chpy/">CHPY</a>, <a href="https://stockanalysis.com/etf/magc/">MAGC</a>, <a href="https://stockanalysis.com/etf/ozem/">OZEM</a>.</li>
+          <li>Issuer pages: <a href="https://www.roundhillinvestments.com/">Roundhill Investments</a>, <a href="https://www.yieldmaxetfs.com/">YieldMax ETFs</a>, and <a href="https://www.vaneck.com/">VanEck</a>.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="page">Prepared May 31, 2026. This report is historical analysis only, not investment advice.</div>
+  </footer>
+</body>
+</html>
