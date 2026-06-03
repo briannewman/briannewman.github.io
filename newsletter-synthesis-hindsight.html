@@ -331,7 +331,7 @@
         </div>
         <aside class="note" aria-label="Current status">
           <strong>Current status</strong>
-          <p>This is an evidence-packet layer, not a final leaderboard. It keeps private claim packets and article IDs out of the public page.</p>
+          <p>Eight reviewable runs have Codex-only hindsight reviews. Private claim packets and article IDs remain local.</p>
         </aside>
       </div>
     </div>
@@ -340,8 +340,8 @@
   <main class="page">
     <section aria-labelledby="summary-title">
       <div class="section-title">
-        <h2 id="summary-title">Run Inventory</h2>
-        <p class="method">The deterministic pass extracts claim-like synthesis units, checks whether their own citations resolve inside the saved run, and finds later article candidates that a reviewer can use for hindsight grading.</p>
+        <h2 id="summary-title">Review Summary</h2>
+        <p class="method">Codex subagents reviewed each hindsight-reviewable saved run against later saved corpus material. The review judged claim survival, not the original model winner.</p>
       </div>
       <div class="cards">
         <article class="card">
@@ -350,19 +350,19 @@
           <p>Saved runs from March 20 through June 1, 2026.</p>
         </article>
         <article class="card">
-          <div class="label">Reviewable with hindsight</div>
+          <div class="label">Codex reviews completed</div>
           <div class="value">8</div>
-          <p>Two latest runs need later saved corpus material before hindsight grading is meaningful.</p>
+          <p>Every run with later saved corpus material now has a Codex-only review.</p>
         </article>
         <article class="card">
-          <div class="label">Citation validity</div>
-          <div class="value">100%</div>
-          <p>Every extracted article reference resolves in its run-local corpus snapshot.</p>
+          <div class="label">Aged well</div>
+          <div class="value">251</div>
+          <p>Claims that later evidence made more concrete or durable.</p>
         </article>
         <article class="card">
-          <div class="label">Claim units extracted</div>
-          <div class="value">604</div>
-          <p>Frames, mechanisms, tensions, and claims. Bare evidence titles were excluded.</p>
+          <div class="label">Contradicted</div>
+          <div class="value">12</div>
+          <p>Claims where later evidence cut against the strong version.</p>
         </article>
       </div>
     </section>
@@ -377,119 +377,102 @@
         <article class="panel">
           <h2>What Is Not Published Here</h2>
           <p>The public page intentionally omits raw claim packets, article IDs, corpus excerpts, and gated-source text. Those artifacts remain local review material.</p>
-          <p>The next step is a judge pass that classifies each claim as aged well, partly right, contradicted, too vague, or not hindsight-testable.</p>
+          <p>The public page intentionally omits raw claim packets, article IDs, corpus excerpts, and gated-source text. Those artifacts remain local review material.</p>
+          <p>The review outputs keep only aggregate grades and verdict counts here.</p>
         </article>
       </div>
     </section>
 
     <section aria-labelledby="table-title">
       <div class="section-title">
-        <h2 id="table-title">Deterministic Review Packet Summary</h2>
-        <p class="method">Future candidate rate is the share of extracted claims with at least one later article above the lexical candidate threshold. It is not an accuracy score.</p>
+        <h2 id="table-title">Codex Hindsight Review Results</h2>
+        <p class="method">Grades are editorial summaries of claim survival. Counts classify extracted claim units as aged well, partly right, contradicted, too vague, or not hindsight-testable.</p>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th scope="col">Run</th>
-              <th scope="col">Articles</th>
-              <th scope="col">Claims</th>
-              <th scope="col">Future Articles</th>
-              <th scope="col">Ref Validity</th>
-              <th scope="col">Future Candidate Rate</th>
-              <th scope="col">Hindsight Review</th>
+              <th scope="col">Grade</th>
+              <th scope="col">Aged Well</th>
+              <th scope="col">Partly Right</th>
+              <th scope="col">Contradicted</th>
+              <th scope="col">Too Vague</th>
+              <th scope="col">Not Testable</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>2026-03-20-session</td>
-              <td>178</td>
-              <td>33</td>
-              <td>468</td>
-              <td>1.00</td>
-              <td>0.97</td>
-              <td><span class="phase current">ready</span></td>
+              <td>B</td>
+              <td>13</td>
+              <td>11</td>
+              <td>2</td>
+              <td>5</td>
+              <td>2</td>
             </tr>
             <tr>
               <td>2026-03-22-dual-feedback-r2</td>
-              <td>189</td>
-              <td>86</td>
-              <td>461</td>
-              <td>1.00</td>
-              <td>0.81</td>
-              <td><span class="phase current">ready</span></td>
+              <td>B+</td>
+              <td>31</td>
+              <td>30</td>
+              <td>5</td>
+              <td>12</td>
+              <td>8</td>
             </tr>
             <tr>
               <td>2026-04-01-dual-r1</td>
-              <td>249</td>
-              <td>50</td>
-              <td>405</td>
-              <td>1.00</td>
-              <td>0.98</td>
-              <td><span class="phase current">ready</span></td>
+              <td>B+</td>
+              <td>30</td>
+              <td>14</td>
+              <td>1</td>
+              <td>3</td>
+              <td>2</td>
             </tr>
             <tr>
               <td>2026-04-04-dual-r1</td>
-              <td>265</td>
-              <td>53</td>
-              <td>389</td>
-              <td>1.00</td>
-              <td>0.98</td>
-              <td><span class="phase current">ready</span></td>
+              <td>B+</td>
+              <td>23</td>
+              <td>22</td>
+              <td>1</td>
+              <td>5</td>
+              <td>2</td>
             </tr>
             <tr>
               <td>2026-04-07-dual-r1</td>
-              <td>286</td>
-              <td>157</td>
-              <td>368</td>
-              <td>1.00</td>
-              <td>0.87</td>
-              <td><span class="phase current">ready</span></td>
+              <td>A-</td>
+              <td>87</td>
+              <td>49</td>
+              <td>3</td>
+              <td>10</td>
+              <td>8</td>
             </tr>
             <tr>
               <td>2026-05-11-dual-r1</td>
-              <td>510</td>
-              <td>76</td>
-              <td>130</td>
-              <td>1.00</td>
-              <td>0.83</td>
-              <td><span class="phase current">ready</span></td>
+              <td>B</td>
+              <td>32</td>
+              <td>26</td>
+              <td>0</td>
+              <td>11</td>
+              <td>7</td>
             </tr>
             <tr>
               <td>2026-05-15-full-refresh-synthesis</td>
-              <td>547</td>
-              <td>54</td>
-              <td>68</td>
-              <td>1.00</td>
-              <td>0.81</td>
-              <td><span class="phase current">ready</span></td>
+              <td>B+</td>
+              <td>24</td>
+              <td>16</td>
+              <td>0</td>
+              <td>8</td>
+              <td>6</td>
             </tr>
             <tr>
               <td>2026-05-21-fresh-synthesis</td>
-              <td>586</td>
-              <td>49</td>
-              <td>32</td>
-              <td>1.00</td>
-              <td>0.88</td>
-              <td><span class="phase current">ready</span></td>
-            </tr>
-            <tr>
-              <td>2026-05-30-refresh</td>
-              <td>654</td>
-              <td>52</td>
+              <td>B+</td>
+              <td>11</td>
+              <td>24</td>
               <td>0</td>
-              <td>1.00</td>
-              <td>n/a</td>
-              <td><span class="phase hold">needs later corpus</span></td>
-            </tr>
-            <tr>
-              <td>2026-06-01-v5-7d-final</td>
-              <td>654</td>
-              <td>43</td>
+              <td>14</td>
               <td>0</td>
-              <td>1.00</td>
-              <td>n/a</td>
-              <td><span class="phase hold">needs later corpus</span></td>
             </tr>
           </tbody>
         </table>
@@ -499,14 +482,14 @@
     <section aria-labelledby="next-title">
       <div class="grid-2">
         <article class="panel">
-          <h2 id="next-title">Next Evaluation Pass</h2>
-          <p>The reviewer should grade claim survival, not original model victory. The useful classifications are aged well, partly right, contradicted, too vague, and not hindsight-testable.</p>
-          <p>The output should identify best-aged claims, worst-aged claims, missed future developments, and prompt-design lessons.</p>
+          <h2 id="next-title">Cross-Run Result</h2>
+          <p>Mechanism-bearing claims aged best: governed agency, orchestration, memory, permissions, tool contracts, auditability, inference infrastructure, power, routing, financing, and bottleneck ownership.</p>
+          <p>Broad legitimacy, resilience, crisis-escalation, and institutional-decay abstractions aged worse unless they named a concrete mechanism and observable implication.</p>
         </article>
         <article class="panel">
-          <h2>Interpretation Guardrail</h2>
-          <p>High future candidate rates are expected for broad AI and market claims. They are useful for routing attention, but they should not become a leaderboard or automatic score.</p>
-          <p>The real judgment is whether later evidence made the old synthesis more precise, less precise, or obsolete.</p>
+          <h2>Prompt Lesson</h2>
+          <p>Future syntheses should preserve claim-level source handles and label each unit as mechanism, tension, absence, prediction, question, or analogy. Those categories age differently.</p>
+          <p>Risk scenarios need trigger, mechanism, expected observable, and time horizon. Otherwise live crisis temperature masquerades as structure.</p>
         </article>
       </div>
     </section>
