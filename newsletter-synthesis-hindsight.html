@@ -213,7 +213,7 @@
 
     table {
       width: 100%;
-      min-width: 900px;
+      min-width: 1120px;
       border-collapse: collapse;
     }
 
@@ -327,7 +327,7 @@
         <div>
           <p class="eyebrow">Historical synthesis evaluation</p>
           <h1>Newsletter Synthesis Hindsight Review</h1>
-          <p class="dek">A first-pass framework for judging old canonical synthesis runs by what later corpus material made clearer, not by which model won the original adjudication.</p>
+          <p class="dek">A first-pass framework for judging old canonical synthesis runs by what later corpus material made clearer, with separate credit for claims that were early rather than merely correct once obvious.</p>
         </div>
         <aside class="note" aria-label="Current status">
           <strong>Current status</strong>
@@ -341,28 +341,28 @@
     <section aria-labelledby="summary-title">
       <div class="section-title">
         <h2 id="summary-title">Review Summary</h2>
-        <p class="method">Codex subagents reviewed each hindsight-reviewable saved run against later saved corpus material. The review judged claim survival, not the original model winner.</p>
+        <p class="method">Codex subagents reviewed each hindsight-reviewable saved run against later saved corpus material. The review now separates claim survival from early, non-obvious priority credit.</p>
       </div>
       <div class="cards">
-        <article class="card">
-          <div class="label">Canonical runs scanned</div>
-          <div class="value">10</div>
-          <p>Saved runs from March 20 through June 1, 2026.</p>
-        </article>
         <article class="card">
           <div class="label">Codex reviews completed</div>
           <div class="value">8</div>
           <p>Every run with later saved corpus material now has a Codex-only review.</p>
         </article>
         <article class="card">
+          <div class="label">Top early-credit run</div>
+          <div class="value">80.9</div>
+          <p>April 1 ranked highest after adding earliness, specificity, and mechanism credit.</p>
+        </article>
+        <article class="card">
+          <div class="label">Most priority points</div>
+          <div class="value">139.34</div>
+          <p>April 7 still has the largest raw volume of useful early signals.</p>
+        </article>
+        <article class="card">
           <div class="label">Aged well</div>
           <div class="value">251</div>
           <p>Claims that later evidence made more concrete or durable.</p>
-        </article>
-        <article class="card">
-          <div class="label">Contradicted</div>
-          <div class="value">12</div>
-          <p>Claims where later evidence cut against the strong version.</p>
         </article>
       </div>
     </section>
@@ -375,18 +375,25 @@
           <p>A claim does not age well merely because a later article uses overlapping words. The lexical match is a lead for review, not a proof of accuracy.</p>
         </article>
         <article class="panel">
-          <h2>What Is Not Published Here</h2>
-          <p>The public page intentionally omits raw claim packets, article IDs, corpus excerpts, and gated-source text. Those artifacts remain local review material.</p>
-          <p>The public page intentionally omits raw claim packets, article IDs, corpus excerpts, and gated-source text. Those artifacts remain local review material.</p>
-          <p>The review outputs keep only aggregate grades and verdict counts here.</p>
+          <h2>What Counts As Early Credit</h2>
+          <p>Accuracy and value are different. Late claims can be correct because the signal had already become obvious; early claims get more credit when they were specific, mechanism-bearing, and later evidence sharpened them.</p>
+          <p>The scorecard uses a deterministic proxy: accuracy buckets, run date, vague/not-testable rates, and mechanism density in the best-aged claim notes.</p>
         </article>
       </div>
     </section>
 
+    <section aria-labelledby="private-title">
+      <article class="panel">
+        <h2 id="private-title">What Is Not Published Here</h2>
+        <p>The public page intentionally omits raw claim packets, article IDs, corpus excerpts, and gated-source text. Those artifacts remain local review material.</p>
+        <p>The review outputs keep only aggregate grades, verdict counts, and scorecard metrics here.</p>
+      </article>
+    </section>
+
     <section aria-labelledby="table-title">
       <div class="section-title">
-        <h2 id="table-title">Codex Hindsight Review Results</h2>
-        <p class="method">Grades are editorial summaries of claim survival. Counts classify extracted claim units as aged well, partly right, contradicted, too vague, or not hindsight-testable.</p>
+        <h2 id="table-title">Accuracy And Early Credit Results</h2>
+        <p class="method">Grades summarize claim survival. Early-credit scores discount late obvious correctness and reward claims that were early, specific, and mechanism-bearing.</p>
       </div>
       <div class="table-wrap">
         <table>
@@ -394,6 +401,9 @@
             <tr>
               <th scope="col">Run</th>
               <th scope="col">Grade</th>
+              <th scope="col">Early Credit</th>
+              <th scope="col">Earliness</th>
+              <th scope="col">Priority Points</th>
               <th scope="col">Aged Well</th>
               <th scope="col">Partly Right</th>
               <th scope="col">Contradicted</th>
@@ -405,6 +415,9 @@
             <tr>
               <td>2026-03-20-session</td>
               <td>B</td>
+              <td>74.3</td>
+              <td>100.0</td>
+              <td>23.50</td>
               <td>13</td>
               <td>11</td>
               <td>2</td>
@@ -414,6 +427,9 @@
             <tr>
               <td>2026-03-22-dual-feedback-r2</td>
               <td>B+</td>
+              <td>70.5</td>
+              <td>97.2</td>
+              <td>57.54</td>
               <td>31</td>
               <td>30</td>
               <td>5</td>
@@ -423,6 +439,9 @@
             <tr>
               <td>2026-04-01-dual-r1</td>
               <td>B+</td>
+              <td>80.9</td>
+              <td>83.3</td>
+              <td>48.62</td>
               <td>30</td>
               <td>14</td>
               <td>1</td>
@@ -432,6 +451,9 @@
             <tr>
               <td>2026-04-04-dual-r1</td>
               <td>B+</td>
+              <td>73.5</td>
+              <td>79.2</td>
+              <td>42.94</td>
               <td>23</td>
               <td>22</td>
               <td>1</td>
@@ -441,6 +463,9 @@
             <tr>
               <td>2026-04-07-dual-r1</td>
               <td>A-</td>
+              <td>76.9</td>
+              <td>75.0</td>
+              <td>139.34</td>
               <td>87</td>
               <td>49</td>
               <td>3</td>
@@ -450,6 +475,9 @@
             <tr>
               <td>2026-05-11-dual-r1</td>
               <td>B</td>
+              <td>56.0</td>
+              <td>26.4</td>
+              <td>39.91</td>
               <td>32</td>
               <td>26</td>
               <td>0</td>
@@ -459,6 +487,9 @@
             <tr>
               <td>2026-05-15-full-refresh-synthesis</td>
               <td>B+</td>
+              <td>50.7</td>
+              <td>15.3</td>
+              <td>25.67</td>
               <td>24</td>
               <td>16</td>
               <td>0</td>
@@ -468,6 +499,9 @@
             <tr>
               <td>2026-05-21-fresh-synthesis</td>
               <td>B+</td>
+              <td>42.9</td>
+              <td>6.9</td>
+              <td>14.95</td>
               <td>11</td>
               <td>24</td>
               <td>0</td>
@@ -484,7 +518,7 @@
         <article class="panel">
           <h2 id="next-title">Cross-Run Result</h2>
           <p>Mechanism-bearing claims aged best: governed agency, orchestration, memory, permissions, tool contracts, auditability, inference infrastructure, power, routing, financing, and bottleneck ownership.</p>
-          <p>Broad legitimacy, resilience, crisis-escalation, and institutional-decay abstractions aged worse unless they named a concrete mechanism and observable implication.</p>
+          <p>The early-credit pass changes the ranking: April 1 has the strongest normalized early signal, while April 7 remains the highest-volume successful run.</p>
         </article>
         <article class="panel">
           <h2>Prompt Lesson</h2>
