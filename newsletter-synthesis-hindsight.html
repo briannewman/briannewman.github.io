@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A hindsight review framework for canonical newsletter synthesis runs.">
+  <title>Newsletter Synthesis Hindsight Review</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #5c6676;
+      --line: #d9e0ea;
+      --page: #f5f7fb;
+      --panel: #ffffff;
+      --navy: #263a5e;
+      --blue: #2257a6;
+      --teal: #0b766b;
+      --green: #19724f;
+      --amber: #a06412;
+      --red: #b83a3a;
+      --blue-soft: #eaf1ff;
+      --teal-soft: #e7f6f3;
+      --amber-soft: #fff5e8;
+      --shadow: 0 18px 45px rgba(24, 33, 47, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      gap: 28px;
+      align-items: end;
+      padding: 44px 0 34px;
+    }
+
+    .eyebrow {
+      color: var(--teal);
+      font-weight: 760;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0 0 10px;
+    }
+
+    h1 {
+      font-size: clamp(2.1rem, 4.8vw, 4.6rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+      margin: 0 0 18px;
+      max-width: 900px;
+    }
+
+    .dek {
+      max-width: 800px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .note {
+      background: var(--navy);
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .note p {
+      margin: 0;
+      color: #dce7fb;
+      font-size: 0.95rem;
+    }
+
+    main {
+      padding: 28px 0 58px;
+    }
+
+    section {
+      margin: 0 0 28px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: 0;
+    }
+
+    .method {
+      margin: 0;
+      max-width: 720px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card,
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .card {
+      min-height: 140px;
+      padding: 18px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 760;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 9px;
+    }
+
+    .value {
+      font-size: 1.65rem;
+      line-height: 1;
+      font-weight: 820;
+      margin-bottom: 10px;
+    }
+
+    .card p,
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .panel h3 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+    }
+
+    .panel p + p {
+      margin-top: 12px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th {
+      background: #eef3fa;
+      color: #334159;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+      font-weight: 780;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .yes {
+      color: var(--green);
+      font-weight: 760;
+    }
+
+    .pending {
+      color: var(--amber);
+      font-weight: 760;
+    }
+
+    .phase {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 88px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--blue-soft);
+      color: var(--navy);
+      font-size: 0.82rem;
+      font-weight: 760;
+    }
+
+    .phase.current {
+      background: var(--teal-soft);
+      color: var(--teal);
+    }
+
+    .phase.hold {
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    footer {
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      padding: 24px 0 36px;
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        width: min(100% - 22px, 1180px);
+      }
+
+      nav,
+      .section-title {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .hero {
+        padding: 34px 0 26px;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="page">
+      <nav aria-label="Site navigation">
+        <a href="/">Public index</a>
+        <span>Newsletter Synthesis Hindsight Review</span>
+      </nav>
+      <div class="hero">
+        <div>
+          <p class="eyebrow">Historical synthesis evaluation</p>
+          <h1>Newsletter Synthesis Hindsight Review</h1>
+          <p class="dek">A first-pass framework for judging old canonical synthesis runs by what later corpus material made clearer, not by which model won the original adjudication.</p>
+        </div>
+        <aside class="note" aria-label="Current status">
+          <strong>Current status</strong>
+          <p>This is an evidence-packet layer, not a final leaderboard. It keeps private claim packets and article IDs out of the public page.</p>
+        </aside>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section aria-labelledby="summary-title">
+      <div class="section-title">
+        <h2 id="summary-title">Run Inventory</h2>
+        <p class="method">The deterministic pass extracts claim-like synthesis units, checks whether their own citations resolve inside the saved run, and finds later article candidates that a reviewer can use for hindsight grading.</p>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <div class="label">Canonical runs scanned</div>
+          <div class="value">10</div>
+          <p>Saved runs from March 20 through June 1, 2026.</p>
+        </article>
+        <article class="card">
+          <div class="label">Reviewable with hindsight</div>
+          <div class="value">8</div>
+          <p>Two latest runs need later saved corpus material before hindsight grading is meaningful.</p>
+        </article>
+        <article class="card">
+          <div class="label">Citation validity</div>
+          <div class="value">100%</div>
+          <p>Every extracted article reference resolves in its run-local corpus snapshot.</p>
+        </article>
+        <article class="card">
+          <div class="label">Claim units extracted</div>
+          <div class="value">604</div>
+          <p>Frames, mechanisms, tensions, and claims. Bare evidence titles were excluded.</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="method-title">
+      <div class="grid-2">
+        <article class="panel">
+          <h2 id="method-title">What Counts As Hindsight</h2>
+          <p>A claim ages well when later articles clarify the mechanism it named, make its tension more visible, or show that the synthesis framed a durable structure rather than a temporary story.</p>
+          <p>A claim does not age well merely because a later article uses overlapping words. The lexical match is a lead for review, not a proof of accuracy.</p>
+        </article>
+        <article class="panel">
+          <h2>What Is Not Published Here</h2>
+          <p>The public page intentionally omits raw claim packets, article IDs, corpus excerpts, and gated-source text. Those artifacts remain local review material.</p>
+          <p>The next step is a judge pass that classifies each claim as aged well, partly right, contradicted, too vague, or not hindsight-testable.</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="table-title">
+      <div class="section-title">
+        <h2 id="table-title">Deterministic Review Packet Summary</h2>
+        <p class="method">Future candidate rate is the share of extracted claims with at least one later article above the lexical candidate threshold. It is not an accuracy score.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Run</th>
+              <th scope="col">Articles</th>
+              <th scope="col">Claims</th>
+              <th scope="col">Future Articles</th>
+              <th scope="col">Ref Validity</th>
+              <th scope="col">Future Candidate Rate</th>
+              <th scope="col">Hindsight Review</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-03-20-session</td>
+              <td>178</td>
+              <td>33</td>
+              <td>468</td>
+              <td>1.00</td>
+              <td>0.97</td>
+              <td><span class="phase current">ready</span></td>
+            </tr>
+            <tr>
+              <td>2026-03-22-dual-feedback-r2</td>
+              <td>189</td>
+              <td>86</td>
+              <td>461</td>
+              <td>1.00</td>
+              <td>0.81</td>
+              <td><span class="phase current">ready</span></td>
+            </tr>
+            <tr>
+              <td>2026-04-01-dual-r1</td>
+              <td>249</td>
+              <td>50</td>
+              <td>405</td>
+              <td>1.00</td>
+              <td>0.98</td>
+              <td><span class="phase current">ready</span></td>
+            </tr>
+            <tr>
+              <td>2026-04-04-dual-r1</td>
+              <td>265</td>
+              <td>53</td>
+              <td>389</td>
+              <td>1.00</td>
+              <td>0.98</td>
+              <td><span class="phase current">ready</span></td>
+            </tr>
+            <tr>
+              <td>2026-04-07-dual-r1</td>
+              <td>286</td>
+              <td>157</td>
+              <td>368</td>
+              <td>1.00</td>
+              <td>0.87</td>
+              <td><span class="phase current">ready</span></td>
+            </tr>
+            <tr>
+              <td>2026-05-11-dual-r1</td>
+              <td>510</td>
+              <td>76</td>
+              <td>130</td>
+              <td>1.00</td>
+              <td>0.83</td>
+              <td><span class="phase current">ready</span></td>
+            </tr>
+            <tr>
+              <td>2026-05-15-full-refresh-synthesis</td>
+              <td>547</td>
+              <td>54</td>
+              <td>68</td>
+              <td>1.00</td>
+              <td>0.81</td>
+              <td><span class="phase current">ready</span></td>
+            </tr>
+            <tr>
+              <td>2026-05-21-fresh-synthesis</td>
+              <td>586</td>
+              <td>49</td>
+              <td>32</td>
+              <td>1.00</td>
+              <td>0.88</td>
+              <td><span class="phase current">ready</span></td>
+            </tr>
+            <tr>
+              <td>2026-05-30-refresh</td>
+              <td>654</td>
+              <td>52</td>
+              <td>0</td>
+              <td>1.00</td>
+              <td>n/a</td>
+              <td><span class="phase hold">needs later corpus</span></td>
+            </tr>
+            <tr>
+              <td>2026-06-01-v5-7d-final</td>
+              <td>654</td>
+              <td>43</td>
+              <td>0</td>
+              <td>1.00</td>
+              <td>n/a</td>
+              <td><span class="phase hold">needs later corpus</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="next-title">
+      <div class="grid-2">
+        <article class="panel">
+          <h2 id="next-title">Next Evaluation Pass</h2>
+          <p>The reviewer should grade claim survival, not original model victory. The useful classifications are aged well, partly right, contradicted, too vague, and not hindsight-testable.</p>
+          <p>The output should identify best-aged claims, worst-aged claims, missed future developments, and prompt-design lessons.</p>
+        </article>
+        <article class="panel">
+          <h2>Interpretation Guardrail</h2>
+          <p>High future candidate rates are expected for broad AI and market claims. They are useful for routing attention, but they should not become a leaderboard or automatic score.</p>
+          <p>The real judgment is whether later evidence made the old synthesis more precise, less precise, or obsolete.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="page">
+      Data summarized from local saved-run review packets generated on June 3, 2026.
+    </div>
+  </footer>
+</body>
+</html>

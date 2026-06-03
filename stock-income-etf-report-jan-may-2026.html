@@ -3,39 +3,841 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=/">
-  <link rel="canonical" href="/">
-  <title>Stock Income ETF Report, Jan-May 2026</title>
+  <meta name="description" content="Stock and income ETF return analysis for Jan. 1, 2026 through May 29, 2026.">
+  <title>Stock and Income ETF Analysis</title>
   <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f7fb;
-      color: #18212f;
+    :root {
+      color-scheme: light;
+      --ink: #18212f;
+      --muted: #5b6677;
+      --line: #d9e0ea;
+      --panel: #ffffff;
+      --page: #f5f7fb;
+      --navy: #243b67;
+      --teal: #0b766b;
+      --green: #19724f;
+      --red: #b83a3a;
+      --amber: #a06412;
+      --blue-soft: #eaf1ff;
+      --teal-soft: #e7f6f3;
+      --red-soft: #fff0f0;
+      --amber-soft: #fff5e8;
+      --shadow: 0 18px 45px rgba(24, 33, 47, 0.08);
     }
 
-    main {
-      width: min(620px, calc(100% - 32px));
-      padding: 28px;
-      background: #fff;
-      border: 1px solid #d9e0ea;
-      border-radius: 8px;
-      box-shadow: 0 18px 45px rgba(24, 33, 47, 0.08);
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
     }
 
     a {
       color: #2257a6;
+      text-decoration-thickness: 1px;
       text-underline-offset: 3px;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hero {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.7fr);
+      padding: 52px 0 34px;
+      align-items: end;
+    }
+
+    .eyebrow {
+      color: var(--teal);
+      font-weight: 750;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0 0 10px;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 4.6vw, 4.5rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+      margin: 0 0 18px;
+      max-width: 880px;
+    }
+
+    .dek {
+      color: var(--muted);
+      font-size: 1.08rem;
+      max-width: 760px;
+      margin: 0;
+    }
+
+    .hero-note {
+      background: var(--navy);
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-note strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .hero-note p {
+      margin: 0;
+      color: #dce7fb;
+      font-size: 0.95rem;
+    }
+
+    main {
+      padding: 28px 0 58px;
+    }
+
+    section {
+      margin: 0 0 28px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    h2 {
+      font-size: 1.45rem;
+      margin: 0;
+      letter-spacing: 0;
+    }
+
+    .method {
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin: 0;
+      max-width: 720px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      min-height: 140px;
+      box-shadow: var(--shadow);
+    }
+
+    .card .label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 9px;
+    }
+
+    .card .value {
+      font-size: 1.55rem;
+      line-height: 1;
+      font-weight: 820;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .positive {
+      color: var(--green);
+    }
+
+    .negative {
+      color: var(--red);
+    }
+
+    .neutral {
+      color: var(--amber);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .panel h3 {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+    }
+
+    .panel p {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .panel p:last-child {
+      margin-bottom: 0;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      min-width: 820px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th {
+      background: #eef3fa;
+      color: #334159;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+      font-weight: 780;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .chart {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 72px minmax(180px, 1fr) 72px;
+      align-items: center;
+      gap: 12px;
+      margin: 13px 0;
+    }
+
+    .bar-label {
+      font-weight: 780;
+    }
+
+    .bar-track {
+      position: relative;
+      height: 30px;
+      background: #edf1f7;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .bar-zero {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      background: #8793a5;
+    }
+
+    .bar {
+      position: absolute;
+      top: 5px;
+      height: 20px;
+      border-radius: 4px;
+    }
+
+    .bar.pos {
+      left: 50%;
+      background: var(--green);
+    }
+
+    .bar.neg {
+      right: 50%;
+      background: var(--red);
+    }
+
+    .bar-value {
+      text-align: right;
+      font-weight: 760;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ticker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 72px;
+      height: 36px;
+      border-radius: 6px;
+      background: var(--blue-soft);
+      color: var(--navy);
+      font-weight: 840;
+      letter-spacing: 0.04em;
+    }
+
+    .verdict {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .winner {
+      border-left: 5px solid var(--teal);
+    }
+
+    .source-list {
+      columns: 2;
+      column-gap: 28px;
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .source-list li {
+      break-inside: avoid;
+      margin: 0 0 8px;
+      color: var(--muted);
+    }
+
+    footer {
+      color: var(--muted);
+      border-top: 1px solid var(--line);
+      padding: 24px 0 36px;
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .grid-2,
+      .verdict {
+        grid-template-columns: 1fr;
+      }
+
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .source-list {
+        columns: 1;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        width: min(100% - 22px, 1180px);
+      }
+
+      .hero {
+        padding: 34px 0 26px;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .section-title {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .bar-row {
+        grid-template-columns: 58px minmax(130px, 1fr) 64px;
+        gap: 8px;
+      }
+
     }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Stock Income ETF Report, Jan-May 2026</h1>
-    <p>Redirecting to the report. <a href="/">Open the report</a>.</p>
+  <header>
+    <div class="page hero">
+      <div>
+        <p class="eyebrow">Static performance report</p>
+        <h1>Stock and Income ETF Analysis</h1>
+        <p class="dek">A review of paired equities and income-oriented ETFs from Jan. 1, 2026 through May 29, 2026, using the tickers provided and a consistent cash total return method.</p>
+      </div>
+      <aside class="hero-note" aria-label="Key finding">
+        <strong>Key finding</strong>
+        <p>CHPY led the full set by cash total return. Among the paired comparisons, raw exposure won five pairs and distribution ETF exposure won one.</p>
+      </aside>
+    </div>
+  </header>
+
+  <main class="page">
+    <section aria-labelledby="summary-title">
+      <div class="section-title">
+        <h2 id="summary-title">Summary Results</h2>
+        <p class="method">Cash total return = (ending close + in-period distributions - starting close) / starting close. Distributions are counted by ex-date and are not reinvested.</p>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <div class="label">Best cash return</div>
+          <div class="value positive">CHPY +59.11%</div>
+          <p>Large price gains plus weekly distributions put CHPY at the top of the expanded set.</p>
+        </article>
+        <article class="card">
+          <div class="label">Pair score</div>
+          <div class="value positive">5 raw / 1 ETF</div>
+          <p>Only GOOW beat its raw equity counterpart by the cash-return method.</p>
+        </article>
+        <article class="card">
+          <div class="label">Largest drag</div>
+          <div class="value negative">COIW -24.81%</div>
+          <p>COIW distributions reduced the drawdown but did not overcome the price decline.</p>
+        </article>
+        <article class="card">
+          <div class="label">Method</div>
+          <div class="value">Cash return</div>
+          <p>Distributions are counted as cash by ex-date, not reinvested.</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="returns-title">
+      <div class="section-title">
+        <h2 id="returns-title">Return Table</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Ticker</th>
+              <th scope="col">Start close</th>
+              <th scope="col">End close</th>
+              <th scope="col">Distributions</th>
+              <th scope="col">Price return</th>
+              <th scope="col">Cash total return</th>
+              <th scope="col">Adj-close proxy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>GOOG</td>
+              <td>$315.32</td>
+              <td>$376.43</td>
+              <td>$0.21000</td>
+              <td class="positive">+19.38%</td>
+              <td class="positive">+19.45%</td>
+              <td class="positive">+19.46%</td>
+            </tr>
+            <tr>
+              <td>GOOW</td>
+              <td>$71.39</td>
+              <td>$75.55</td>
+              <td>$10.33084</td>
+              <td class="positive">+5.83%</td>
+              <td class="positive">+20.30%</td>
+              <td class="positive">+22.63%</td>
+            </tr>
+            <tr>
+              <td>TSLA</td>
+              <td>$438.07</td>
+              <td>$435.79</td>
+              <td>$0.00000</td>
+              <td class="negative">-0.52%</td>
+              <td class="negative">-0.52%</td>
+              <td class="negative">-0.52%</td>
+            </tr>
+            <tr>
+              <td>TSLW</td>
+              <td>$32.34</td>
+              <td>$26.17</td>
+              <td>$4.88934</td>
+              <td class="negative">-19.08%</td>
+              <td class="negative">-3.96%</td>
+              <td class="negative">-2.87%</td>
+            </tr>
+            <tr>
+              <td>NVDA</td>
+              <td>$188.85</td>
+              <td>$211.14</td>
+              <td>$0.01000</td>
+              <td class="positive">+11.80%</td>
+              <td class="positive">+11.81%</td>
+              <td class="positive">+11.81%</td>
+            </tr>
+            <tr>
+              <td>NVDW</td>
+              <td>$42.37</td>
+              <td>$39.63</td>
+              <td>$7.13926</td>
+              <td class="negative">-6.47%</td>
+              <td class="positive">+10.38%</td>
+              <td class="positive">+12.39%</td>
+            </tr>
+            <tr>
+              <td>COIN</td>
+              <td>$236.53</td>
+              <td>$189.03</td>
+              <td>$0.00000</td>
+              <td class="negative">-20.08%</td>
+              <td class="negative">-20.08%</td>
+              <td class="negative">-20.08%</td>
+            </tr>
+            <tr>
+              <td>COIW</td>
+              <td>$20.95</td>
+              <td>$11.88</td>
+              <td>$3.87253</td>
+              <td class="negative">-43.29%</td>
+              <td class="negative">-24.81%</td>
+              <td class="negative">-25.79%</td>
+            </tr>
+            <tr>
+              <td>PLTR</td>
+              <td>$167.86</td>
+              <td>$156.54</td>
+              <td>$0.00000</td>
+              <td class="negative">-6.74%</td>
+              <td class="negative">-6.74%</td>
+              <td class="negative">-6.74%</td>
+            </tr>
+            <tr>
+              <td>PLTW</td>
+              <td>$35.08</td>
+              <td>$25.09</td>
+              <td>$5.65676</td>
+              <td class="negative">-28.48%</td>
+              <td class="negative">-12.35%</td>
+              <td class="negative">-11.51%</td>
+            </tr>
+            <tr>
+              <td>GDX</td>
+              <td>$85.73</td>
+              <td>$89.49</td>
+              <td>$0.00000</td>
+              <td class="positive">+4.39%</td>
+              <td class="positive">+4.39%</td>
+              <td class="positive">+4.39%</td>
+            </tr>
+            <tr>
+              <td>GDXW</td>
+              <td>$57.88</td>
+              <td>$47.37</td>
+              <td>$12.65692</td>
+              <td class="negative">-18.16%</td>
+              <td class="positive">+3.71%</td>
+              <td class="positive">+1.35%</td>
+            </tr>
+            <tr>
+              <td>YMAG</td>
+              <td>$14.12</td>
+              <td>$12.90</td>
+              <td>$2.10180</td>
+              <td class="negative">-8.64%</td>
+              <td class="positive">+6.25%</td>
+              <td class="positive">+7.52%</td>
+            </tr>
+            <tr>
+              <td>YQQQ</td>
+              <td>$12.18</td>
+              <td>$9.98</td>
+              <td>$1.26810</td>
+              <td class="negative">-18.06%</td>
+              <td class="negative">-7.65%</td>
+              <td class="negative">-9.12%</td>
+            </tr>
+            <tr>
+              <td>CHPY</td>
+              <td>$57.68</td>
+              <td>$80.85</td>
+              <td>$10.92530</td>
+              <td class="positive">+40.17%</td>
+              <td class="positive">+59.11%</td>
+              <td class="positive">+66.85%</td>
+            </tr>
+            <tr>
+              <td>MAGC</td>
+              <td>$24.81</td>
+              <td>$19.00</td>
+              <td>$0.00000</td>
+              <td class="negative">-23.42%</td>
+              <td class="negative">-23.42%</td>
+              <td class="negative">-23.42%</td>
+            </tr>
+            <tr>
+              <td>OZEM</td>
+              <td>$34.34</td>
+              <td>$31.76</td>
+              <td>$0.00000</td>
+              <td class="negative">-7.51%</td>
+              <td class="negative">-7.51%</td>
+              <td class="negative">-7.51%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="chart-title">
+      <div class="section-title">
+        <h2 id="chart-title">Cash Total Return</h2>
+      </div>
+      <div class="chart" role="img" aria-label="Bar chart showing cash total returns from CHPY positive 59.11 percent to COIW negative 24.81 percent.">
+        <div class="bar-row">
+          <div class="bar-label">CHPY</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar pos" style="width: 50.00%;"></span></div>
+          <div class="bar-value positive">+59.11%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">GOOW</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar pos" style="width: 17.17%;"></span></div>
+          <div class="bar-value positive">+20.30%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">GOOG</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar pos" style="width: 16.45%;"></span></div>
+          <div class="bar-value positive">+19.45%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">NVDA</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar pos" style="width: 9.99%;"></span></div>
+          <div class="bar-value positive">+11.81%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">NVDW</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar pos" style="width: 8.78%;"></span></div>
+          <div class="bar-value positive">+10.38%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">YMAG</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar pos" style="width: 5.29%;"></span></div>
+          <div class="bar-value positive">+6.25%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">GDX</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar pos" style="width: 3.71%;"></span></div>
+          <div class="bar-value positive">+4.39%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">GDXW</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar pos" style="width: 3.14%;"></span></div>
+          <div class="bar-value positive">+3.71%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">TSLA</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar neg" style="width: 0.44%;"></span></div>
+          <div class="bar-value negative">-0.52%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">TSLW</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar neg" style="width: 3.35%;"></span></div>
+          <div class="bar-value negative">-3.96%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">PLTR</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar neg" style="width: 5.70%;"></span></div>
+          <div class="bar-value negative">-6.74%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">YQQQ</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar neg" style="width: 6.47%;"></span></div>
+          <div class="bar-value negative">-7.65%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">OZEM</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar neg" style="width: 6.35%;"></span></div>
+          <div class="bar-value negative">-7.51%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">PLTW</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar neg" style="width: 10.45%;"></span></div>
+          <div class="bar-value negative">-12.35%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">COIN</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar neg" style="width: 16.99%;"></span></div>
+          <div class="bar-value negative">-20.08%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">MAGC</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar neg" style="width: 19.81%;"></span></div>
+          <div class="bar-value negative">-23.42%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">COIW</div>
+          <div class="bar-track"><span class="bar-zero"></span><span class="bar neg" style="width: 20.99%;"></span></div>
+          <div class="bar-value negative">-24.81%</div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="takeaways-title">
+      <div class="section-title">
+        <h2 id="takeaways-title">Takeaways</h2>
+      </div>
+      <div class="grid-2">
+        <article class="panel winner">
+          <h3>GOOG vs. GOOW</h3>
+          <p>GOOG returned about +19.45% including its March dividend. GOOW rose only +5.83% on price, but $10.33084 in distributions lifted cash total return to +20.30%.</p>
+          <p>GOOW narrowly wins this period. Its result reflects WeeklyPay structure, leveraged weekly exposure, distributions, path dependency, and return of capital risk.</p>
+        </article>
+        <article class="panel">
+          <h3>TSLA vs. TSLW</h3>
+          <p>TSLA was nearly flat at -0.52%. TSLW fell -19.08% on price, and its $4.88934 in distributions reduced the loss to -3.96%.</p>
+          <p>TSLW helped versus its own price decline but still trailed TSLA on total return.</p>
+        </article>
+        <article class="panel">
+          <h3>NVDA vs. NVDW</h3>
+          <p>NVDA returned +11.81% including its small March dividend. NVDW's weekly distributions lifted its return to +10.38% despite a -6.47% price decline.</p>
+          <p>NVDW kept the gap close, but raw NVDA slightly led for the period.</p>
+        </article>
+        <article class="panel">
+          <h3>COIN vs. COIW</h3>
+          <p>COIN fell -20.08%. COIW fell much more on price, but $3.87253 in distributions reduced its cash total return to -24.81%.</p>
+          <p>Raw COIN won this pair, though both sides were hurt by the underlying drawdown.</p>
+        </article>
+        <article class="panel">
+          <h3>PLTR vs. PLTW</h3>
+          <p>PLTR declined -6.74%. PLTW distributions reduced a steep price loss, but cash total return was still -12.35%.</p>
+          <p>Raw PLTR won this pair because the distribution stream did not fully offset PLTW's price decline.</p>
+        </article>
+        <article class="panel">
+          <h3>GDX vs. GDXW</h3>
+          <p>GDX gained +4.39%. GDXW fell -18.16% on price, but $12.65692 in distributions brought cash total return back to +3.71%.</p>
+          <p>GDXW nearly matched GDX, but the raw gold miners ETF finished ahead.</p>
+        </article>
+        <article class="panel">
+          <h3>YMAG</h3>
+          <p>YMAG declined -8.64% on price, but $2.10180 in distributions lifted cash total return to +6.25%.</p>
+          <p>This is diversified YieldMax option-income fund-of-funds exposure rather than raw Magnificent 7 equity exposure.</p>
+        </article>
+        <article class="panel">
+          <h3>YQQQ</h3>
+          <p>YQQQ declined -18.06% on price. Distributions reduced the loss, but cash total return remained negative at -7.65%.</p>
+          <p>That result fits a strong tech tape because YQQQ is short Nasdaq-100-oriented.</p>
+        </article>
+        <article class="panel winner">
+          <h3>CHPY</h3>
+          <p>CHPY was the standout at +59.11% cash total return, combining a +40.17% price gain with $10.92530 in distributions.</p>
+          <p>Its result dominated the expanded set.</p>
+        </article>
+        <article class="panel">
+          <h3>MAGC and OZEM</h3>
+          <p>MAGC declined -23.42% and OZEM declined -7.51%. Neither had an in-period distribution by ex-date.</p>
+          <p>These two behaved like straight price-return rows during this window.</p>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="conclusion-title">
+      <div class="section-title">
+        <h2 id="conclusion-title">Conclusion</h2>
+      </div>
+      <div class="panel">
+        <p>Using the tickers provided, this analysis compares raw equity exposure, Roundhill WeeklyPay leveraged distribution ETFs, YieldMax income funds, and several standalone thematic ETFs.</p>
+        <p>For the six direct pairs, raw exposure won five: TSLA, NVDA, COIN, PLTR, and GDX. Distribution ETF exposure won one: GOOW. CHPY was the strongest standalone result, while COIW and MAGC were the weakest cash-return rows in the expanded set.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="sources-title">
+      <div class="section-title">
+        <h2 id="sources-title">Sources</h2>
+      </div>
+      <div class="panel">
+        <ul class="source-list">
+          <li><a href="https://www.roundhillinvestments.com/etf/goow/">Roundhill GOOW official fund page</a></li>
+          <li><a href="https://www.roundhillinvestments.com/etf/tslw/">Roundhill TSLW official fund page</a></li>
+          <li><a href="https://www.roundhillinvestments.com/etf/nvdw/">Roundhill NVDW official fund page</a></li>
+          <li><a href="https://www.roundhillinvestments.com/etf/coiw/">Roundhill COIW official fund page</a></li>
+          <li><a href="https://www.roundhillinvestments.com/etf/pltw/">Roundhill PLTW official fund page</a></li>
+          <li><a href="https://www.roundhillinvestments.com/etf/gdxw/">Roundhill GDXW official fund page</a></li>
+          <li><a href="https://www.roundhillinvestments.com/etf/magc/">Roundhill MAGC official fund page</a></li>
+          <li><a href="https://www.roundhillinvestments.com/etf/ozem/">Roundhill OZEM official fund page</a></li>
+          <li><a href="https://yieldmaxetfs.com/our-etfs/ymag/">YieldMax YMAG official fund page</a></li>
+          <li><a href="https://yieldmaxetfs.com/our-etfs/yqqq/">YieldMax YQQQ official fund page</a></li>
+          <li><a href="https://yieldmaxetfs.com/our-etfs/chpy/">YieldMax CHPY official fund page</a></li>
+          <li><a href="https://www.vaneck.com/us/en/investments/gold-miners-etf-gdx/overview/">VanEck GDX official fund page</a></li>
+          <li><a href="https://stockanalysis.com/stocks/goog/history/">StockAnalysis GOOG price history</a></li>
+          <li><a href="https://stockanalysis.com/stocks/goog/dividend/">StockAnalysis GOOG dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/goow/history/">StockAnalysis GOOW price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/goow/dividend/">StockAnalysis GOOW dividend history</a></li>
+          <li><a href="https://stockanalysis.com/stocks/tsla/history/">StockAnalysis TSLA price history</a></li>
+          <li><a href="https://stockanalysis.com/stocks/tsla/dividend/">StockAnalysis TSLA dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/tslw/history/">StockAnalysis TSLW price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/tslw/dividend/">StockAnalysis TSLW dividend history</a></li>
+          <li><a href="https://stockanalysis.com/stocks/nvda/history/">StockAnalysis NVDA price history</a></li>
+          <li><a href="https://stockanalysis.com/stocks/nvda/dividend/">StockAnalysis NVDA dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/nvdw/history/">StockAnalysis NVDW price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/nvdw/dividend/">StockAnalysis NVDW dividend history</a></li>
+          <li><a href="https://stockanalysis.com/stocks/coin/history/">StockAnalysis COIN price history</a></li>
+          <li><a href="https://stockanalysis.com/stocks/coin/dividend/">StockAnalysis COIN dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/coiw/history/">StockAnalysis COIW price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/coiw/dividend/">StockAnalysis COIW dividend history</a></li>
+          <li><a href="https://stockanalysis.com/stocks/pltr/history/">StockAnalysis PLTR price history</a></li>
+          <li><a href="https://stockanalysis.com/stocks/pltr/dividend/">StockAnalysis PLTR dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/pltw/history/">StockAnalysis PLTW price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/pltw/dividend/">StockAnalysis PLTW dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/gdx/history/">StockAnalysis GDX price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/gdx/dividend/">StockAnalysis GDX dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/gdxw/history/">StockAnalysis GDXW price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/gdxw/dividend/">StockAnalysis GDXW dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/ymag/history/">StockAnalysis YMAG price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/ymag/dividend/">StockAnalysis YMAG dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/yqqq/history/">StockAnalysis YQQQ price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/yqqq/dividend/">StockAnalysis YQQQ dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/chpy/history/">StockAnalysis CHPY price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/chpy/dividend/">StockAnalysis CHPY dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/magc/history/">StockAnalysis MAGC price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/magc/dividend/">StockAnalysis MAGC dividend history</a></li>
+          <li><a href="https://stockanalysis.com/etf/ozem/history/">StockAnalysis OZEM price history</a></li>
+          <li><a href="https://stockanalysis.com/etf/ozem/dividend/">StockAnalysis OZEM dividend history</a></li>
+        </ul>
+      </div>
+    </section>
   </main>
+
+  <footer>
+    <div class="page">Static GitHub Pages-ready report. Data reviewed May 31, 2026.</div>
+  </footer>
 </body>
 </html>
