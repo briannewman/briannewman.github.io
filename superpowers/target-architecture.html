@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Target Architecture · Sequencing Spec</title>
+  <style>
+/* Superpowers spec/plan artifacts — timeline / pipeline-flow design.
+   Light slate page, dark code slabs, milestone-accented timeline spine. */
+:root {
+  --bg: #f3f4f7;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --ink: #191c22;
+  --soft: #474e5c;
+  --muted: #868d9c;
+  --line: #e3e6ec;
+  --line-2: #eef0f4;
+  --spine: #cdd2dc;
+  --accent: #3b5bdb;
+  --accent-soft: #eaeefc;
+  --m1: #11935f;
+  --m2: #c98a12;
+  --m3: #7b54e0;
+  --m4: #d4498a;
+  --m5: #d9663a;
+  --ok: #11935f;
+  --warn: #b07d10;
+  --err: #d23b3b;
+  --code-bg: #0d1117;
+  --code-fg: #c9d1d9;
+  --radius: 12px;
+  --font: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+
+/* ---- top bar ---- */
+header.topbar {
+  position: sticky; top: 0; z-index: 30; background: rgba(243,244,247,0.85);
+  backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid var(--line);
+}
+header.topbar .wrap { display: flex; align-items: center; gap: 18px; height: 54px; }
+header.topbar a.home { font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+header.topbar a.home:hover { text-decoration: none; color: var(--accent); }
+header.topbar .crumbs { display: flex; gap: 6px; font-size: 13px; color: var(--muted); }
+header.topbar .crumbs a { color: var(--muted); }
+header.topbar .crumbs a.here { color: var(--ink); font-weight: 600; }
+header.topbar .crumbs .sep { color: var(--spine); }
+header.topbar .spacer { margin-left: auto; }
+header.topbar .ghbtn {
+  font-size: 12px; color: var(--soft); border: 1px solid var(--line);
+  border-radius: 7px; padding: 5px 11px; background: var(--surface);
+}
+
+/* ---- pipeline rail ---- */
+.pipeline {
+  background: var(--surface); border-bottom: 1px solid var(--line);
+  position: sticky; top: 54px; z-index: 20;
+}
+.pipeline .wrap { display: flex; align-items: center; gap: 0; height: 60px; overflow-x: auto; }
+.pipeline .stage {
+  display: flex; align-items: center; gap: 9px; white-space: nowrap; color: var(--muted);
+  font-size: 12.5px; font-weight: 500;
+}
+.pipeline .stage .dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--spine); flex-shrink: 0;
+}
+.pipeline .stage.active { color: var(--ink); font-weight: 700; }
+.pipeline .stage.active .dot { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.pipeline .stage.feeds { color: var(--soft); }
+.pipeline .stage.feeds .dot { background: var(--accent); opacity: 0.45; }
+.pipeline .link {
+  flex: 1; min-width: 22px; height: 2px; background: var(--spine);
+  margin: 0 12px; border-radius: 2px;
+}
+.pipeline .link.lit { background: linear-gradient(90deg, var(--spine), var(--accent)); }
+
+/* ---- document head ---- */
+main.doc { padding: 0 0 120px; }
+.doc-head { padding: 44px 0 8px; }
+.doc-head .badge { margin-bottom: 16px; }
+.doc-head h1 {
+  font-family: var(--font); font-size: 2.5rem; line-height: 1.12; margin: 0 0 14px;
+  letter-spacing: -0.015em; font-weight: 600;
+}
+.doc-head .lead { font-size: 1.2rem; color: var(--soft); max-width: 42em; margin: 0; line-height: 1.5; }
+.doc-head .facts { display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 22px; }
+.doc-head .facts .chip {
+  font-size: 12px; color: var(--soft); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 20px; padding: 5px 13px;
+}
+.doc-head .facts .chip b { color: var(--ink); font-weight: 600; }
+
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 5px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.badge-plan { background: var(--accent-soft); color: var(--accent); }
+.badge-approved { background: rgba(17,147,95,0.12); color: var(--m1); }
+
+h2 { font-family: var(--font); font-size: 1.55rem; font-weight: 600; margin: 46px 0 14px; letter-spacing: -0.01em; }
+h3 { font-size: 1.1rem; margin: 24px 0 10px; }
+p { max-width: 44em; }
+ul, ol { max-width: 44em; }
+li { margin: 5px 0; }
+
+.callout {
+  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 10px; padding: 16px 20px; margin: 20px 0; font-size: 0.96em; color: var(--soft);
+  max-width: none;
+}
+.callout.warn { border-left-color: var(--warn); }
+.callout strong { color: var(--ink); }
+
+.kv { display: grid; gap: 2px; margin: 20px 0; }
+.kv .row { display: grid; grid-template-columns: 140px 1fr; gap: 18px; padding: 14px 0; border-top: 1px solid var(--line-2); }
+.kv .row:last-child { border-bottom: 1px solid var(--line-2); }
+.kv .k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; padding-top: 2px; }
+.kv .v { color: var(--soft); max-width: none; }
+
+table.grid { width: 100%; border-collapse: collapse; font-size: 14px; margin: 20px 0; }
+table.grid th, table.grid td { border-bottom: 1px solid var(--line); padding: 12px 14px; text-align: left; vertical-align: top; }
+table.grid th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+table.grid td:first-child { color: var(--soft); white-space: nowrap; }
+table.grid td .mono { color: var(--ink); }
+.tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+.tag.create { background: rgba(17,147,95,0.13); color: var(--m1); }
+.tag.modify { background: rgba(201,138,18,0.14); color: var(--m2); }
+.tag.test   { background: rgba(123,84,224,0.13); color: var(--m3); }
+.tag.doc    { background: var(--accent-soft); color: var(--accent); }
+
+/* ---- timeline ---- */
+.timeline { position: relative; margin: 16px 0 0; padding-left: 38px; }
+.timeline::before {
+  content: ""; position: absolute; left: 11px; top: 6px; bottom: 6px; width: 2px;
+  background: linear-gradient(180deg, var(--accent), var(--spine) 85%);
+  border-radius: 2px;
+}
+.timeline .tl-label {
+  position: relative; margin: 26px 0 10px -38px; padding-left: 38px;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 700;
+}
+
+.task {
+  position: relative; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); margin: 14px 0; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(20,24,34,0.03);
+}
+.task::before { /* node on the spine */
+  content: ""; position: absolute; left: -33px; top: 22px; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--surface); border: 3px solid var(--accent);
+  box-shadow: 0 0 0 4px var(--bg); z-index: 2;
+}
+.task[open]::before { background: var(--accent); }
+.task > summary {
+  cursor: pointer; list-style: none; padding: 18px 22px; display: flex; align-items: center; gap: 14px;
+}
+.task > summary::-webkit-details-marker { display: none; }
+.task > summary .tnum {
+  font-family: var(--mono); font-size: 12px; color: #fff; background: var(--accent);
+  padding: 3px 10px; border-radius: 20px; font-weight: 600; flex-shrink: 0;
+}
+.task > summary .ttitle { font-size: 1.05rem; color: var(--ink); font-weight: 600; }
+.task > summary .files { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.task > summary .chev { color: var(--muted); transition: transform 0.15s; }
+.task[open] > summary .chev { transform: rotate(90deg); }
+.task .body { padding: 2px 22px 22px; border-top: 1px solid var(--line-2); }
+.task .files-line { font-size: 13px; color: var(--soft); margin: 14px 0 4px; }
+
+.step { margin: 18px 0; }
+.step .step-head { font-size: 13px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.step .step-head .box { width: 15px; height: 15px; border: 1.5px solid var(--spine); border-radius: 4px; flex-shrink: 0; }
+.step .desc { color: var(--soft); font-size: 0.96em; }
+
+pre.code {
+  background: var(--code-bg); border: 1px solid #1d2430; border-radius: 9px;
+  padding: 16px 18px; overflow-x: auto; margin: 12px 0; color: var(--code-fg);
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.55; white-space: pre; tab-size: 4;
+}
+pre.code.sh { color: #9fe7bf; }
+.expect { font-size: 13px; color: var(--muted); margin: 8px 0 12px; }
+.expect .run { color: var(--soft); font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+.expect.ok { color: var(--ok); }
+
+.script-pill { display: inline-block; font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--line); padding: 1px 7px; border-radius: 5px; margin: 1px 3px 1px 0; color: var(--soft); }
+.commit-bar {
+  display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 14px;
+  background: var(--surface-2); border: 1px dashed var(--line); border-radius: 8px;
+  font-size: 12px; color: var(--muted);
+}
+.commit-bar .label { text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; font-weight: 700; }
+.commit-bar code { color: var(--soft); }
+
+.out-scope { color: var(--soft); font-size: 15px; padding: 12px 18px; border-left: 3px solid var(--line); margin: 10px 0; background: var(--surface); border-radius: 0 8px 8px 0; }
+.foot-nav { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; }
+
+/* ---- dot-nav (right rail) ---- */
+nav.dotnav {
+  position: fixed; right: max(22px, calc((100vw - 860px)/2 - 60px)); top: 50%;
+  transform: translateY(-50%); z-index: 15; display: flex; flex-direction: column; gap: 3px;
+}
+nav.dotnav a {
+  display: flex; align-items: center; gap: 9px; justify-content: flex-end;
+  font-size: 11px; color: var(--muted); padding: 3px 0;
+}
+nav.dotnav a .lbl { opacity: 0; transform: translateX(6px); transition: all 0.15s; white-space: nowrap; }
+nav.dotnav a .pip { width: 8px; height: 8px; border-radius: 50%; background: var(--spine); flex-shrink: 0; transition: all 0.15s; }
+nav.dotnav a:hover { text-decoration: none; }
+nav.dotnav a:hover .lbl { opacity: 1; transform: none; }
+nav.dotnav a.active .pip { background: var(--accent); transform: scale(1.35); }
+nav.dotnav a.active .lbl { opacity: 1; transform: none; color: var(--ink); font-weight: 600; }
+@media (max-width: 1180px) { nav.dotnav { display: none; } }
+
+.toolbar { display: flex; gap: 18px; align-items: center; margin: 6px 0 0; font-size: 13px; }
+.toolbar button.link { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 13px; padding: 0; }
+.toolbar button.link:hover { text-decoration: underline; }
+.toolbar .src { color: var(--muted); }
+
+.codewrap { position: relative; }
+.codewrap .copy-btn { position: absolute; top: 8px; right: 8px; opacity: 0; transition: opacity 0.15s; }
+.codewrap:hover .copy-btn { opacity: 1; }
+.copy-btn { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid #2a3340; background: #161c26; color: #9aa4b2; cursor: pointer; }
+.copy-btn:hover { color: #fff; border-color: var(--accent); }
+
+#toast {
+  position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff;
+  font-size: 13px; padding: 10px 16px; border-radius: 8px; opacity: 0;
+  transition: opacity 0.2s; pointer-events: none; z-index: 50;
+}
+#toast.show { opacity: 1; }
+
+@media (max-width: 640px) {
+  .doc-head h1 { font-size: 1.9rem; }
+  .kv .row { grid-template-columns: 1fr; gap: 4px; }
+  .timeline { padding-left: 26px; }
+  .task::before { left: -21px; }
+}
+
+/* ---- spec-page specifics (timeline design system) ---- */
+.seq { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 26px 0 4px; }
+.seq .ms { font-size: 12px; font-weight: 600; color: var(--muted); padding: 5px 13px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); white-space: nowrap; }
+.seq .ms.m1 { border-color: var(--m1); color: var(--m1); }
+.seq .ms.m2 { border-color: var(--m2); color: var(--m2); }
+.seq .ms.m3 { border-color: var(--m3); color: var(--m3); }
+.seq .ms.m4 { border-color: var(--m4); color: var(--m4); }
+.seq .ms.m5 { border-color: var(--m5); color: var(--m5); }
+.seq .bar { flex: 0 0 22px; height: 2px; background: var(--spine); border-radius: 2px; }
+
+section { scroll-margin-top: 130px; }
+
+table.decisions { width: 100%; border-collapse: collapse; font-size: 14px; margin: 20px 0; }
+table.decisions th, table.decisions td { border-bottom: 1px solid var(--line); padding: 12px 14px; text-align: left; vertical-align: top; }
+table.decisions th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+table.decisions td:first-child { color: var(--soft); width: 36%; font-weight: 500; }
+
+figure.diagram-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; margin: 24px 0; overflow-x: auto; box-shadow: 0 1px 2px rgba(20,24,34,0.03); }
+figure.diagram-wrap figcaption { font-size: 12px; color: var(--muted); margin-top: 14px; text-align: center; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 0; }
+.tab-btn { border: 1px solid var(--line); background: var(--surface); color: var(--soft); padding: 9px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: var(--sans); }
+.tab-btn:hover { border-color: var(--muted); color: var(--ink); }
+.tab-btn.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.tab-panel { display: none; margin-top: 18px; }
+.tab-panel.active { display: block; }
+
+.milestone-card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; box-shadow: 0 1px 2px rgba(20,24,34,0.03); }
+.milestone-card::before { content: ""; position: absolute; left: 0; top: 20px; bottom: 20px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
+.milestone-card.c-m1::before { background: var(--m1); }
+.milestone-card.c-m2::before { background: var(--m2); }
+.milestone-card.c-m3::before { background: var(--m3); }
+.milestone-card.c-m4::before { background: var(--m4); }
+.milestone-card.c-m5::before { background: var(--m5); }
+.milestone-card h4 { margin: 0 0 8px; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; font-family: var(--font); font-weight: 600; }
+.milestone-card .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+.milestone-card ul { margin: 12px 0 0; padding-left: 1.2em; color: var(--soft); }
+.milestone-card li { margin: 6px 0; }
+.milestone-card .note { margin-top: 14px; font-size: 14px; color: var(--muted); }
+.milestone-card .note.warn { color: var(--warn); }
+
+.guardrail-list { display: grid; gap: 10px; margin: 16px 0; }
+.guardrail { display: flex; gap: 12px; align-items: flex-start; padding: 14px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; font-size: 14px; }
+.guardrail .gi { color: var(--accent); font-size: 15px; line-height: 1.4; }
+.guardrail strong { color: var(--ink); display: block; margin-bottom: 4px; }
+.guardrail span { color: var(--soft); }
+
+.plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+.plan-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; font-size: 14px; box-shadow: 0 1px 2px rgba(20,24,34,0.03); transition: border-color 0.15s, transform 0.15s; text-decoration: none; color: inherit; display: block; }
+.plan-card:hover { border-color: var(--accent); transform: translateY(-2px); text-decoration: none; }
+.plan-card h4 { margin: 0 0 8px; font-size: 15px; color: var(--ink); }
+.plan-card p { margin: 0; color: var(--soft); line-height: 1.5; max-width: none; }
+.plan-card .file-link { display: block; margin-top: 12px; font-family: var(--mono); font-size: 11.5px; color: var(--accent); word-break: break-all; }
+
+.copy-row { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button.act-btn { font-family: var(--sans); font-size: 12px; padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--soft); cursor: pointer; }
+button.act-btn:hover { color: var(--ink); border-color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="home" href="index.html">Superpowers</a>
+      <nav class="crumbs">
+        <a class="here">spec</a><span class="sep">/</span>
+        <a href="m1-findings-registry.html">M1 registry</a><span class="sep">/</span>
+        <a href="synthesis-output-validator.html">validator</a>
+      </nav>
+      <span class="spacer"></span>
+      <span class="ghbtn">5 milestones · 6 tables</span>
+    </div>
+  </header>
+
+  <nav class="dotnav" aria-label="Section navigation">
+    <a class="nav-link" href="#overview"><span class="lbl">Overview</span><span class="pip"></span></a>
+    <a class="nav-link" href="#decisions"><span class="lbl">Decisions</span><span class="pip"></span></a>
+    <a class="nav-link" href="#sequencing"><span class="lbl">Build order</span><span class="pip"></span></a>
+    <a class="nav-link" href="#storage"><span class="lbl">intel.db</span><span class="pip"></span></a>
+    <a class="nav-link" href="#milestones"><span class="lbl">Milestones</span><span class="pip"></span></a>
+    <a class="nav-link" href="#pipeline-fit"><span class="lbl">Pipeline fit</span><span class="pip"></span></a>
+    <a class="nav-link" href="#guardrails"><span class="lbl">Guardrails</span><span class="pip"></span></a>
+    <a class="nav-link" href="#plans"><span class="lbl">Plans</span><span class="pip"></span></a>
+    <a class="nav-link" href="#sources"><span class="lbl">Sources</span><span class="pip"></span></a>
+  </nav>
+
+  <main class="doc">
+    <div class="wrap">
+      <div class="doc-head">
+        <span class="badge badge-approved">Approved spec</span>
+        <h1>Target Architecture<br>Sequencing</h1>
+        <p class="lead">Master sequencing design for the incremental graph, event-driven synthesis, and longitudinal layer described in HANDOVER. Each milestone gets its own implementation plan when reached; this artifact fixes decisions, storage schema, milestone shapes, and guardrails.</p>
+        <div class="seq" aria-label="Milestone sequence">
+          <span class="ms m1">M1 Registry</span><span class="bar"></span>
+          <span class="ms m2">M2 Digests</span><span class="bar"></span>
+          <span class="ms m3">M3 Graph</span><span class="bar"></span>
+          <span class="ms m4">M4 Recall</span><span class="bar"></span>
+          <span class="ms m5">M5 Resolution</span>
+        </div>
+        <div class="facts">
+          <span class="chip">fable worktree</span>
+          <span class="chip"><b>5</b> milestones</span>
+          <span class="chip"><b>6</b> tables</span>
+          <span class="chip">2026-06-10</span>
+        </div>
+      </div>
+
+      <section id="overview"></section>
+
+      <section id="decisions">
+        <h2>Decisions</h2>
+        <table class="decisions">
+          <thead><tr><th>Topic</th><th>Choice</th></tr></thead>
+          <tbody>
+            <tr><td>Planning approach</td><td>One master sequencing doc; spec each milestone as reached</td></tr>
+            <tr><td>Build order</td><td>Value-first: M1 registry &rarr; M2 digests &rarr; M3 graph &rarr; M4 recall synthesis &rarr; M5 resolution</td></tr>
+            <tr><td>Longitudinal storage</td><td>One SQLite DB, <code class="mono">data/intel.db</code></td></tr>
+            <tr><td>Synthesis trigger</td><td>Advisory at fetch time; cadence stays manual</td></tr>
+            <tr><td>Embeddings</td><td>OpenAI <code class="mono">text-embedding-3-small</code></td></tr>
+            <tr><td>Early longitudinal scope</td><td>Registry core + prediction tracking / resolution</td></tr>
+            <tr><td>Deferred</td><td>Author-calibration weighting, taste-spec negatives, scheduled automation, vector DBs, standing-position modeling</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="sequencing">
+        <h2>Why this build order</h2>
+        <p><strong>M1</strong> is the only milestone that improves output quality at the very next run with zero prerequisites, and it starts the prediction clock — resolutions need calendar time, so capturing predictions early is the only way <strong>M5</strong> has anything to grade.</p>
+        <p><strong>M2</strong> (prompt redesign plus paid re-extract of the full corpus) comes after the quick win. <strong>M3</strong> and <strong>M4</strong> depend on M2 embeddings. Deferring author calibration costs nothing: resolution events are stored durably; calibration is a derived view computable retroactively.</p>
+        <figure class="diagram-wrap">
+          <svg viewBox="0 0 720 200" width="100%" height="auto" role="img" aria-label="Milestone dependency flow">
+            <defs>
+              <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#868d9c"/>
+              </marker>
+            </defs>
+            <rect x="20" y="70" width="100" height="56" rx="8" fill="#ffffff" stroke="#11935f" stroke-width="2"/>
+            <text x="70" y="95" text-anchor="middle" fill="#191c22" font-family="system-ui" font-size="13" font-weight="700">M1</text>
+            <text x="70" y="112" text-anchor="middle" fill="#868d9c" font-family="system-ui" font-size="10">Registry</text>
+
+            <rect x="150" y="70" width="100" height="56" rx="8" fill="#ffffff" stroke="#c98a12" stroke-width="2"/>
+            <text x="200" y="95" text-anchor="middle" fill="#191c22" font-family="system-ui" font-size="13" font-weight="700">M2</text>
+            <text x="200" y="112" text-anchor="middle" fill="#868d9c" font-family="system-ui" font-size="10">Digests</text>
+
+            <rect x="280" y="70" width="100" height="56" rx="8" fill="#ffffff" stroke="#7b54e0" stroke-width="2"/>
+            <text x="330" y="95" text-anchor="middle" fill="#191c22" font-family="system-ui" font-size="13" font-weight="700">M3</text>
+            <text x="330" y="112" text-anchor="middle" fill="#868d9c" font-family="system-ui" font-size="10">Graph</text>
+
+            <rect x="410" y="70" width="100" height="56" rx="8" fill="#ffffff" stroke="#d4498a" stroke-width="2"/>
+            <text x="460" y="95" text-anchor="middle" fill="#191c22" font-family="system-ui" font-size="13" font-weight="700">M4</text>
+            <text x="460" y="112" text-anchor="middle" fill="#868d9c" font-family="system-ui" font-size="10">Recall</text>
+
+            <rect x="540" y="70" width="100" height="56" rx="8" fill="#ffffff" stroke="#d9663a" stroke-width="2"/>
+            <text x="590" y="95" text-anchor="middle" fill="#191c22" font-family="system-ui" font-size="13" font-weight="700">M5</text>
+            <text x="590" y="112" text-anchor="middle" fill="#868d9c" font-family="system-ui" font-size="10">Resolve</text>
+
+            <line x1="120" y1="98" x2="148" y2="98" stroke="#868d9c" marker-end="url(#arrow)"/>
+            <line x1="250" y1="98" x2="278" y2="98" stroke="#868d9c" marker-end="url(#arrow)"/>
+            <line x1="380" y1="98" x2="408" y2="98" stroke="#868d9c" marker-end="url(#arrow)"/>
+            <line x1="510" y1="98" x2="538" y2="98" stroke="#868d9c" marker-end="url(#arrow)"/>
+
+            <text x="70" y="48" text-anchor="middle" fill="#11935f" font-family="system-ui" font-size="11">Next-run quality</text>
+            <text x="200" y="48" text-anchor="middle" fill="#c98a12" font-family="system-ui" font-size="11">Embeddings</text>
+            <text x="460" y="48" text-anchor="middle" fill="#d4498a" font-family="system-ui" font-size="11">Boundary fix</text>
+            <text x="590" y="160" text-anchor="middle" fill="#d9663a" font-family="system-ui" font-size="11">Needs time on clock</text>
+            <path d="M70 126 L70 145 L590 145 L590 126" fill="none" stroke="#d9663a" stroke-dasharray="4 3" opacity="0.6"/>
+          </svg>
+          <figcaption>Value-first sequencing; M1 also feeds the prediction clock for M5.</figcaption>
+        </figure>
+      </section>
+
+      <section id="storage">
+        <h2>Storage — <code class="mono">data/intel.db</code></h2>
+        <p>One SQLite database via <span class="script-pill">scripts/intel_db.py</span> (schema, migrations, accessors). Run artifacts stay flat JSON as today; <code class="mono">intel.db</code> holds only cross-run state. <span class="script-pill">save_run.py</span> manifest records db schema version; the db file is committed after each promoted run.</p>
+        <figure class="diagram-wrap">
+          <svg viewBox="0 0 680 320" width="100%" height="auto" role="img" aria-label="intel.db tables">
+            <style>.tbl-title { font: 700 12px system-ui; fill: #191c22; } .tbl-sub { font: 10px system-ui; fill: #868d9c; }</style>
+            <rect x="10" y="20" width="200" height="88" rx="6" fill="#ffffff" stroke="#e3e6ec"/>
+            <text class="tbl-title" x="22" y="42">findings</text>
+            <text class="tbl-sub" x="22" y="58">finding_id, headline, mechanism_text</text>
+            <text class="tbl-sub" x="22" y="72">status, evidence JSON, run slugs</text>
+            <text class="tbl-sub" x="22" y="94" fill="#11935f">M1</text>
+
+            <rect x="230" y="20" width="200" height="88" rx="6" fill="#ffffff" stroke="#e3e6ec"/>
+            <text class="tbl-title" x="242" y="42">finding_events</text>
+            <text class="tbl-sub" x="242" y="58">append-only transitions</text>
+            <text class="tbl-sub" x="242" y="72">status = fold of events</text>
+            <text class="tbl-sub" x="242" y="94" fill="#11935f">M1</text>
+
+            <rect x="450" y="20" width="220" height="88" rx="6" fill="#ffffff" stroke="#e3e6ec"/>
+            <text class="tbl-title" x="462" y="42">predictions</text>
+            <text class="tbl-sub" x="462" y="58">statement, falsifiable_by, status</text>
+            <text class="tbl-sub" x="462" y="72">finding- or digest-sourced</text>
+            <text class="tbl-sub" x="462" y="94" fill="#11935f">M1 + M2</text>
+
+            <rect x="10" y="130" width="200" height="80" rx="6" fill="#ffffff" stroke="#e3e6ec"/>
+            <text class="tbl-title" x="22" y="152">articles</text>
+            <text class="tbl-sub" x="22" y="168">outcome annotations</text>
+            <text class="tbl-sub" x="22" y="182">firewall vs edges</text>
+            <text class="tbl-sub" x="22" y="198" fill="#11935f">M1</text>
+
+            <rect x="230" y="130" width="200" height="80" rx="6" fill="#ffffff" stroke="#e3e6ec"/>
+            <text class="tbl-title" x="242" y="152">embeddings</text>
+            <text class="tbl-sub" x="242" y="168">finding | digest | claim</text>
+            <text class="tbl-sub" x="242" y="182">text-embedding-3-small</text>
+            <text class="tbl-sub" x="242" y="198" fill="#c98a12">M1 + M2</text>
+
+            <rect x="450" y="130" width="220" height="80" rx="6" fill="#ffffff" stroke="#e3e6ec"/>
+            <text class="tbl-title" x="462" y="152">edges</text>
+            <text class="tbl-sub" x="462" y="168">src/dst article, score</text>
+            <text class="tbl-sub" x="462" y="182">vector + entity + mechanism</text>
+            <text class="tbl-sub" x="462" y="198" fill="#7b54e0">M3</text>
+
+            <rect x="120" y="240" width="440" height="64" rx="6" fill="#eaeefc" stroke="#3b5bdb" stroke-dasharray="6 4"/>
+            <text class="tbl-title" x="340" y="268" text-anchor="middle">Flat JSON run dirs (unchanged)</text>
+            <text class="tbl-sub" x="340" y="286" text-anchor="middle">data/runs/&lt;slug&gt;/ — promotion snapshots only</text>
+          </svg>
+          <figcaption>Cross-run state in SQLite; per-run artifacts stay immutable JSON trees.</figcaption>
+        </figure>
+      </section>
+
+      <section id="milestones">
+        <h2>Milestones M1–M5</h2>
+        <div class="tabs" role="tablist">
+          <button class="tab-btn active" role="tab" aria-selected="true" data-tab="m1">M1 Registry</button>
+          <button class="tab-btn" role="tab" data-tab="m2">M2 Digests</button>
+          <button class="tab-btn" role="tab" data-tab="m3">M3 Graph</button>
+          <button class="tab-btn" role="tab" data-tab="m4">M4 Recall</button>
+          <button class="tab-btn" role="tab" data-tab="m5">M5 Resolve</button>
+        </div>
+
+        <div id="panel-m1" class="tab-panel active" role="tabpanel">
+          <div class="milestone-card c-m1" id="m1">
+            <h4><span class="dot" style="background:var(--m1)"></span> M1 — Findings registry + prediction capture</h4>
+            <p style="color:var(--soft);margin:0;max-width:none">Runs after validator passes, before <code class="mono">save_run.py</code>. Injects standing context into synthesis; starts the prediction clock.</p>
+            <ul>
+              <li><span class="script-pill">registry_ingest.py</span> — embed findings, shortlist matches, Haiku-class confirm, events or new rows; extract falsifiable predictions</li>
+              <li><span class="script-pill">build_standing_context.py</span> — open findings block in stable prompt prefix (delta-only instruction)</li>
+              <li><span class="script-pill">seed_registry.py</span> — bootstrap from <code class="mono">data/runs/</code>; stale findings older than two windows unless re-cited</li>
+            </ul>
+            <p class="note">Touch-points: optional <code class="mono">finding_updates</code> on synthesis envelope; validator checks <code class="mono">finding_id</code>; near-duplicate gate in registry ingest (pre-promotion exit code).</p>
+          </div>
+        </div>
+
+        <div id="panel-m2" class="tab-panel" role="tabpanel">
+          <div class="milestone-card c-m2" id="m2">
+            <h4><span class="dot" style="background:var(--m2)"></span> M2 — Digest redesign + full corpus re-extract</h4>
+            <p style="color:var(--soft);margin:0;max-width:none">Claims become rich objects; paid one-shot re-extract ~739 articles; retires legacy synthesis payload prunes.</p>
+            <ul>
+              <li>Schema: <code class="mono">text, quote, kind, entities, quantities, mechanism_chain, caveats, novelty</code>; article <code class="mono">content_type</code></li>
+              <li><span class="script-pill">check_entailment.py</span> — quote entails claim text; failures flagged <code class="mono">unentailed</code></li>
+              <li><span class="script-pill">embed_claims.py</span> — embeddings for claims and digests</li>
+              <li>Every <code class="mono">kind=prediction</code> claim → <code class="mono">predictions</code> row</li>
+            </ul>
+            <p class="note warn">Regression: golden-window synthesis before/after. Copy golden fixture out of gitignored grok worktree before M2 starts.</p>
+          </div>
+        </div>
+
+        <div id="panel-m3" class="tab-panel" role="tabpanel">
+          <div class="milestone-card c-m3" id="m3">
+            <h4><span class="dot" style="background:var(--m3)"></span> M3 — Incremental graph + liveness + advisory trigger</h4>
+            <ul>
+              <li><span class="script-pill">update_graph.py</span> — per new article: entailment → embed → score vs stored embeddings; weighted blend + time decay + bridge inversion; top-K≈5 edges</li>
+              <li><strong>Liveness</strong> is computed: in window ∨ new edge in last N ingests ∨ cited by open finding ∨ open prediction</li>
+              <li><strong>Advisory trigger</strong> after fetch: sum new-edge weight vs threshold T; print top 5 edges — human still runs synthesis</li>
+            </ul>
+          </div>
+        </div>
+
+        <div id="panel-m4" class="tab-panel" role="tabpanel">
+          <div class="milestone-card c-m4" id="m4">
+            <h4><span class="dot" style="background:var(--m4)"></span> M4 — Recall-set synthesis + escalation verification</h4>
+            <ul>
+              <li>Recall stage in <span class="script-pill">run_deep_synthesis.py</span>: ~15 prior-window digests linked by strong edges, marked recall block</li>
+              <li>Enrichment over window + recall; validator widens ID set only</li>
+              <li>Post-validation grounding on cited articles (bodies in <code class="mono">article_bodies.json</code>); failures flagged, never truncated</li>
+            </ul>
+          </div>
+        </div>
+
+        <div id="panel-m5" class="tab-panel" role="tabpanel">
+          <div class="milestone-card c-m5" id="m5">
+            <h4><span class="dot" style="background:var(--m5)"></span> M5 — Prediction resolution grader + write-back</h4>
+            <ul>
+              <li><span class="script-pill">resolve_predictions.py</span> — corpus search first (embedding), web fallback; adjudication-style citation attachment by code</li>
+              <li>Default verdict <code class="mono">unresolvable</code>; explicit outcome required for confirm/refute</li>
+              <li>Write-backs to predictions, articles, finding events — durable for retroactive calibration</li>
+              <li><strong>Hindsight firewall:</strong> graph and enrichment never read outcome columns</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="pipeline-fit">
+        <h2>Where this sits in the refresh pipeline</h2>
+        <figure class="diagram-wrap">
+          <svg viewBox="0 0 700 280" width="100%" height="auto" role="img" aria-label="Pipeline integration">
+            <rect x="10" y="30" width="90" height="36" rx="4" fill="#ffffff" stroke="#e3e6ec"/>
+            <text x="55" y="52" text-anchor="middle" fill="#474e5c" font-size="10" font-family="system-ui">fetch</text>
+            <rect x="110" y="30" width="90" height="36" rx="4" fill="#ffffff" stroke="#e3e6ec"/>
+            <text x="155" y="52" text-anchor="middle" fill="#474e5c" font-size="10" font-family="system-ui">extract</text>
+            <rect x="210" y="30" width="90" height="36" rx="4" fill="#ffffff" stroke="#e3e6ec"/>
+            <text x="255" y="52" text-anchor="middle" fill="#474e5c" font-size="10" font-family="system-ui">corpus</text>
+            <rect x="310" y="30" width="100" height="36" rx="4" fill="#ffffff" stroke="#e3e6ec"/>
+            <text x="360" y="52" text-anchor="middle" fill="#474e5c" font-size="10" font-family="system-ui">enrichment</text>
+            <rect x="420" y="30" width="90" height="36" rx="4" fill="#ffffff" stroke="#e3e6ec"/>
+            <text x="465" y="52" text-anchor="middle" fill="#474e5c" font-size="10" font-family="system-ui">synthesis</text>
+            <rect x="520" y="30" width="90" height="36" rx="4" fill="#ffffff" stroke="#3b5bdb" stroke-width="1.5"/>
+            <text x="565" y="52" text-anchor="middle" fill="#3b5bdb" font-size="10" font-family="system-ui">validator</text>
+            <rect x="620" y="30" width="70" height="36" rx="4" fill="#ffffff" stroke="#11935f" stroke-width="1.5"/>
+            <text x="655" y="52" text-anchor="middle" fill="#11935f" font-size="9" font-family="system-ui">registry</text>
+
+            <text x="655" y="88" text-anchor="middle" fill="#11935f" font-size="9" font-family="system-ui">M1 ingest</text>
+            <line x1="655" y1="66" x2="655" y2="100" stroke="#11935f" stroke-dasharray="3 2"/>
+
+            <rect x="420" y="110" width="120" height="40" rx="4" fill="#eaeefc" stroke="#3b5bdb"/>
+            <text x="480" y="128" text-anchor="middle" fill="#191c22" font-size="10" font-family="system-ui">standing context</text>
+            <text x="480" y="142" text-anchor="middle" fill="#868d9c" font-size="9" font-family="system-ui">injected pre-synthesis (M1)</text>
+            <path d="M480 70 L480 108" stroke="#3b5bdb" marker-end="url(#arrow-b)"/>
+            <defs>
+              <marker id="arrow-b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 Z" fill="#3b5bdb"/>
+              </marker>
+            </defs>
+
+            <rect x="210" y="180" width="130" height="40" rx="4" fill="#f3effd" stroke="#7b54e0"/>
+            <text x="275" y="198" text-anchor="middle" fill="#191c22" font-size="10" font-family="system-ui">update_graph (M3)</text>
+            <text x="275" y="212" text-anchor="middle" fill="#868d9c" font-size="9" font-family="system-ui">after ingest</text>
+            <line x1="255" y1="66" x2="275" y2="178" stroke="#7b54e0" stroke-dasharray="4 3"/>
+
+            <rect x="620" y="180" width="70" height="40" rx="4" fill="#ffffff" stroke="#e3e6ec"/>
+            <text x="655" y="205" text-anchor="middle" fill="#474e5c" font-size="10" font-family="system-ui">save_run</text>
+            <line x1="655" y1="100" x2="655" y2="178" stroke="#11935f"/>
+          </svg>
+          <figcaption>M1 hooks validator → registry → save; standing context feeds back into the next synthesis run.</figcaption>
+        </figure>
+      </section>
+
+      <section id="guardrails">
+        <h2>Guardrails and testing</h2>
+        <div class="guardrail-list">
+          <div class="guardrail">
+            <div class="gi">◇</div>
+            <div><strong>Golden window</strong><span>Each milestone shippable independently; same fixture before/after; finding quality diffed by hand (user is taste arbiter).</span></div>
+          </div>
+          <div class="guardrail">
+            <div class="gi">◇</div>
+            <div><strong>Invariants only extend</strong><span><code class="mono">finding_id</code> membership (M1), recall-set ID widening (M4); grounding identical for recalled articles.</span></div>
+          </div>
+          <div class="guardrail">
+            <div class="gi">◇</div>
+            <div><strong>Registry decoupling</strong><span>Registry consumes validator-enforced envelope only — M2 digest changes cannot break M1.</span></div>
+          </div>
+          <div class="guardrail">
+            <div class="gi">◇</div>
+            <div><strong>Unit tests</strong><span>Finding match pairs, edge scoring, liveness predicate, resolution conservatism (<code class="mono">unresolvable</code> default).</span></div>
+          </div>
+        </div>
+        <h3>Explicitly out of scope</h3>
+        <p class="out-scope">Author-calibration weighting in synthesis; refuted-findings-as-negative-examples; scheduled automation; vector databases; per-author standing-position modeling beyond M2 novelty lookup.</p>
+      </section>
+
+      <section id="plans">
+        <h2>Implementation plans</h2>
+        <p style="color:var(--soft)">Derived plans live under <code class="mono">docs/superpowers/plans/</code>. Workers should use superpowers subagent-driven development or executing-plans skills.</p>
+        <div class="plan-grid">
+          <a class="plan-card" href="synthesis-output-validator.html">
+            <h4>Synthesis output validator</h4>
+            <p>Mechanical <code class="mono">article_id</code> membership, evidence counts, one corrective retry — wired into deep and feedback synthesis runners.</p>
+            <span class="file-link">plans/2026-06-10-synthesis-output-validator.md</span>
+          </a>
+          <a class="plan-card" href="m1-findings-registry.html">
+            <h4>M1 findings registry</h4>
+            <p>SQLite schema, registry ingest, standing context, seed from promoted runs, validator <code class="mono">finding_id</code> checks.</p>
+            <span class="file-link">plans/2026-06-10-m1-findings-registry.md</span>
+          </a>
+        </div>
+      </section>
+
+      <section id="sources">
+        <h2>Source markdown</h2>
+        <p>Canonical spec: <code class="mono">docs/superpowers/specs/2026-06-10-target-architecture-sequencing-design.md</code> in the newsletter-intel source repo. These published pages are the rendered, self-contained HTML; the Markdown remains the source of truth for agentic workers.</p>
+        <div class="copy-row">
+          <button type="button" class="act-btn" id="copy-prompt">Copy agent prompt (implement M1)</button>
+          <button type="button" class="act-btn" id="copy-paths">Copy spec paths</button>
+          <span>Open this file in a browser from the repo for full interactivity.</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast" role="status">Copied</div>
+
+  <script>
+    (function () {
+      // Milestone tabs.
+      var tabs = document.querySelectorAll('.tab-btn');
+      var panels = document.querySelectorAll('.tab-panel');
+      tabs.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.getAttribute('data-tab');
+          tabs.forEach(function (b) {
+            b.classList.toggle('active', b === btn);
+            b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+          });
+          panels.forEach(function (p) {
+            p.classList.toggle('active', p.id === 'panel-' + id);
+          });
+        });
+      });
+
+      // Scroll-spy for the right-rail dot nav.
+      var navLinks = Array.prototype.slice.call(document.querySelectorAll('a.nav-link[href^="#"]'));
+      var sections = navLinks.map(function (a) {
+        return { link: a, el: document.getElementById(a.getAttribute('href').slice(1)) };
+      }).filter(function (s) { return s.el; });
+      function onScroll() {
+        var y = window.scrollY + 140;
+        var current = sections[0];
+        sections.forEach(function (s) { if (s.el.offsetTop <= y) current = s; });
+        navLinks.forEach(function (l) { l.classList.remove('active'); });
+        if (current) current.link.classList.add('active');
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      // Copy buttons + toast.
+      var toast = document.getElementById('toast');
+      function showToast() {
+        toast.classList.add('show');
+        setTimeout(function () { toast.classList.remove('show'); }, 1600);
+      }
+      function copyText(text) {
+        navigator.clipboard.writeText(text).then(showToast).catch(function () {
+          var ta = document.createElement('textarea');
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); document.body.removeChild(ta); showToast();
+        });
+      }
+      document.getElementById('copy-prompt').addEventListener('click', function () {
+        copyText(
+          'Read docs/superpowers/target-architecture.html and specs/2026-06-10-target-architecture-sequencing-design.md. ' +
+          'Implement the next unchecked task in docs/superpowers/plans/2026-06-10-m1-findings-registry.md using the repo test conventions.'
+        );
+      });
+      document.getElementById('copy-paths').addEventListener('click', function () {
+        copyText([
+          'docs/superpowers/specs/2026-06-10-target-architecture-sequencing-design.md',
+          'docs/superpowers/plans/2026-06-10-m1-findings-registry.md',
+          'docs/superpowers/plans/2026-06-10-synthesis-output-validator.md',
+          'docs/superpowers/target-architecture.html'
+        ].join('\n'));
+      });
+
+      // Deep-link to a milestone tab via #m1..#m5.
+      if (location.hash) {
+        var hash = location.hash.replace('#', '');
+        if (/^m[1-5]$/.test(hash)) {
+          var b = document.querySelector('.tab-btn[data-tab="' + hash + '"]');
+          if (b) b.click();
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

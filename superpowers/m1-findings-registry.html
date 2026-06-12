@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M1 — Findings Registry + Prediction Capture · Implementation Plan</title>
+  <style>
+/* Superpowers spec/plan artifacts — timeline / pipeline-flow design.
+   Light slate page, dark code slabs, milestone-accented timeline spine. */
+:root {
+  --bg: #f3f4f7;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --ink: #191c22;
+  --soft: #474e5c;
+  --muted: #868d9c;
+  --line: #e3e6ec;
+  --line-2: #eef0f4;
+  --spine: #cdd2dc;
+  --accent: #3b5bdb;
+  --accent-soft: #eaeefc;
+  --m1: #11935f;
+  --m2: #c98a12;
+  --m3: #7b54e0;
+  --m4: #d4498a;
+  --m5: #d9663a;
+  --ok: #11935f;
+  --warn: #b07d10;
+  --err: #d23b3b;
+  --code-bg: #0d1117;
+  --code-fg: #c9d1d9;
+  --radius: 12px;
+  --font: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+
+/* ---- top bar ---- */
+header.topbar {
+  position: sticky; top: 0; z-index: 30; background: rgba(243,244,247,0.85);
+  backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid var(--line);
+}
+header.topbar .wrap { display: flex; align-items: center; gap: 18px; height: 54px; }
+header.topbar a.home { font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+header.topbar a.home:hover { text-decoration: none; color: var(--accent); }
+header.topbar .crumbs { display: flex; gap: 6px; font-size: 13px; color: var(--muted); }
+header.topbar .crumbs a { color: var(--muted); }
+header.topbar .crumbs a.here { color: var(--ink); font-weight: 600; }
+header.topbar .crumbs .sep { color: var(--spine); }
+header.topbar .spacer { margin-left: auto; }
+header.topbar .ghbtn {
+  font-size: 12px; color: var(--soft); border: 1px solid var(--line);
+  border-radius: 7px; padding: 5px 11px; background: var(--surface);
+}
+
+/* ---- pipeline rail ---- */
+.pipeline {
+  background: var(--surface); border-bottom: 1px solid var(--line);
+  position: sticky; top: 54px; z-index: 20;
+}
+.pipeline .wrap { display: flex; align-items: center; gap: 0; height: 60px; overflow-x: auto; }
+.pipeline .stage {
+  display: flex; align-items: center; gap: 9px; white-space: nowrap; color: var(--muted);
+  font-size: 12.5px; font-weight: 500;
+}
+.pipeline .stage .dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--spine); flex-shrink: 0;
+}
+.pipeline .stage.active { color: var(--ink); font-weight: 700; }
+.pipeline .stage.active .dot { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.pipeline .stage.feeds { color: var(--soft); }
+.pipeline .stage.feeds .dot { background: var(--accent); opacity: 0.45; }
+.pipeline .link {
+  flex: 1; min-width: 22px; height: 2px; background: var(--spine);
+  margin: 0 12px; border-radius: 2px;
+}
+.pipeline .link.lit { background: linear-gradient(90deg, var(--spine), var(--accent)); }
+
+/* ---- document head ---- */
+main.doc { padding: 0 0 120px; }
+.doc-head { padding: 44px 0 8px; }
+.doc-head .badge { margin-bottom: 16px; }
+.doc-head h1 {
+  font-family: var(--font); font-size: 2.5rem; line-height: 1.12; margin: 0 0 14px;
+  letter-spacing: -0.015em; font-weight: 600;
+}
+.doc-head .lead { font-size: 1.2rem; color: var(--soft); max-width: 42em; margin: 0; line-height: 1.5; }
+.doc-head .facts { display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 22px; }
+.doc-head .facts .chip {
+  font-size: 12px; color: var(--soft); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 20px; padding: 5px 13px;
+}
+.doc-head .facts .chip b { color: var(--ink); font-weight: 600; }
+
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 5px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.badge-plan { background: var(--accent-soft); color: var(--accent); }
+.badge-approved { background: rgba(17,147,95,0.12); color: var(--m1); }
+
+h2 { font-family: var(--font); font-size: 1.55rem; font-weight: 600; margin: 46px 0 14px; letter-spacing: -0.01em; }
+h3 { font-size: 1.1rem; margin: 24px 0 10px; }
+p { max-width: 44em; }
+ul, ol { max-width: 44em; }
+li { margin: 5px 0; }
+
+.callout {
+  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 10px; padding: 16px 20px; margin: 20px 0; font-size: 0.96em; color: var(--soft);
+  max-width: none;
+}
+.callout.warn { border-left-color: var(--warn); }
+.callout strong { color: var(--ink); }
+
+.kv { display: grid; gap: 2px; margin: 20px 0; }
+.kv .row { display: grid; grid-template-columns: 140px 1fr; gap: 18px; padding: 14px 0; border-top: 1px solid var(--line-2); }
+.kv .row:last-child { border-bottom: 1px solid var(--line-2); }
+.kv .k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; padding-top: 2px; }
+.kv .v { color: var(--soft); max-width: none; }
+
+table.grid { width: 100%; border-collapse: collapse; font-size: 14px; margin: 20px 0; }
+table.grid th, table.grid td { border-bottom: 1px solid var(--line); padding: 12px 14px; text-align: left; vertical-align: top; }
+table.grid th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+table.grid td:first-child { color: var(--soft); white-space: nowrap; }
+table.grid td .mono { color: var(--ink); }
+.tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+.tag.create { background: rgba(17,147,95,0.13); color: var(--m1); }
+.tag.modify { background: rgba(201,138,18,0.14); color: var(--m2); }
+.tag.test   { background: rgba(123,84,224,0.13); color: var(--m3); }
+.tag.doc    { background: var(--accent-soft); color: var(--accent); }
+
+/* ---- timeline ---- */
+.timeline { position: relative; margin: 16px 0 0; padding-left: 38px; }
+.timeline::before {
+  content: ""; position: absolute; left: 11px; top: 6px; bottom: 6px; width: 2px;
+  background: linear-gradient(180deg, var(--accent), var(--spine) 85%);
+  border-radius: 2px;
+}
+.timeline .tl-label {
+  position: relative; margin: 26px 0 10px -38px; padding-left: 38px;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 700;
+}
+
+.task {
+  position: relative; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); margin: 14px 0; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(20,24,34,0.03);
+}
+.task::before { /* node on the spine */
+  content: ""; position: absolute; left: -33px; top: 22px; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--surface); border: 3px solid var(--accent);
+  box-shadow: 0 0 0 4px var(--bg); z-index: 2;
+}
+.task[open]::before { background: var(--accent); }
+.task > summary {
+  cursor: pointer; list-style: none; padding: 18px 22px; display: flex; align-items: center; gap: 14px;
+}
+.task > summary::-webkit-details-marker { display: none; }
+.task > summary .tnum {
+  font-family: var(--mono); font-size: 12px; color: #fff; background: var(--accent);
+  padding: 3px 10px; border-radius: 20px; font-weight: 600; flex-shrink: 0;
+}
+.task > summary .ttitle { font-size: 1.05rem; color: var(--ink); font-weight: 600; }
+.task > summary .files { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.task > summary .chev { color: var(--muted); transition: transform 0.15s; }
+.task[open] > summary .chev { transform: rotate(90deg); }
+.task .body { padding: 2px 22px 22px; border-top: 1px solid var(--line-2); }
+.task .files-line { font-size: 13px; color: var(--soft); margin: 14px 0 4px; }
+
+.step { margin: 18px 0; }
+.step .step-head { font-size: 13px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.step .step-head .box { width: 15px; height: 15px; border: 1.5px solid var(--spine); border-radius: 4px; flex-shrink: 0; }
+.step .desc { color: var(--soft); font-size: 0.96em; }
+
+pre.code {
+  background: var(--code-bg); border: 1px solid #1d2430; border-radius: 9px;
+  padding: 16px 18px; overflow-x: auto; margin: 12px 0; color: var(--code-fg);
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.55; white-space: pre; tab-size: 4;
+}
+pre.code.sh { color: #9fe7bf; }
+.expect { font-size: 13px; color: var(--muted); margin: 8px 0 12px; }
+.expect .run { color: var(--soft); font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+.expect.ok { color: var(--ok); }
+
+.script-pill { display: inline-block; font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--line); padding: 1px 7px; border-radius: 5px; margin: 1px 3px 1px 0; color: var(--soft); }
+.commit-bar {
+  display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 14px;
+  background: var(--surface-2); border: 1px dashed var(--line); border-radius: 8px;
+  font-size: 12px; color: var(--muted);
+}
+.commit-bar .label { text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; font-weight: 700; }
+.commit-bar code { color: var(--soft); }
+
+.out-scope { color: var(--soft); font-size: 15px; padding: 12px 18px; border-left: 3px solid var(--line); margin: 10px 0; background: var(--surface); border-radius: 0 8px 8px 0; }
+.foot-nav { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; }
+
+/* ---- dot-nav (right rail) ---- */
+nav.dotnav {
+  position: fixed; right: max(22px, calc((100vw - 860px)/2 - 60px)); top: 50%;
+  transform: translateY(-50%); z-index: 15; display: flex; flex-direction: column; gap: 3px;
+}
+nav.dotnav a {
+  display: flex; align-items: center; gap: 9px; justify-content: flex-end;
+  font-size: 11px; color: var(--muted); padding: 3px 0;
+}
+nav.dotnav a .lbl { opacity: 0; transform: translateX(6px); transition: all 0.15s; white-space: nowrap; }
+nav.dotnav a .pip { width: 8px; height: 8px; border-radius: 50%; background: var(--spine); flex-shrink: 0; transition: all 0.15s; }
+nav.dotnav a:hover { text-decoration: none; }
+nav.dotnav a:hover .lbl { opacity: 1; transform: none; }
+nav.dotnav a.active .pip { background: var(--accent); transform: scale(1.35); }
+nav.dotnav a.active .lbl { opacity: 1; transform: none; color: var(--ink); font-weight: 600; }
+@media (max-width: 1180px) { nav.dotnav { display: none; } }
+
+.toolbar { display: flex; gap: 18px; align-items: center; margin: 6px 0 0; font-size: 13px; }
+.toolbar button.link { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 13px; padding: 0; }
+.toolbar button.link:hover { text-decoration: underline; }
+.toolbar .src { color: var(--muted); }
+
+.codewrap { position: relative; }
+.codewrap .copy-btn { position: absolute; top: 8px; right: 8px; opacity: 0; transition: opacity 0.15s; }
+.codewrap:hover .copy-btn { opacity: 1; }
+.copy-btn { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid #2a3340; background: #161c26; color: #9aa4b2; cursor: pointer; }
+.copy-btn:hover { color: #fff; border-color: var(--accent); }
+
+#toast {
+  position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff;
+  font-size: 13px; padding: 10px 16px; border-radius: 8px; opacity: 0;
+  transition: opacity 0.2s; pointer-events: none; z-index: 50;
+}
+#toast.show { opacity: 1; }
+
+@media (max-width: 640px) {
+  .doc-head h1 { font-size: 1.9rem; }
+  .kv .row { grid-template-columns: 1fr; gap: 4px; }
+  .timeline { padding-left: 26px; }
+  .task::before { left: -21px; }
+}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="home" href="index.html">Superpowers</a>
+      <nav class="crumbs">
+        <a href="target-architecture.html">spec</a><span class="sep">/</span>
+        <a class="here">M1 registry</a><span class="sep">/</span>
+        <a href="synthesis-output-validator.html">validator</a>
+      </nav>
+      <span class="spacer"></span>
+      <span class="ghbtn">9 tasks · TDD</span>
+    </div>
+  </header>
+
+  <div class="pipeline" aria-label="Where this plan sits in the refresh pipeline">
+    <div class="wrap">
+      <span class="stage"><span class="dot"></span>Fetch</span><span class="link"></span>
+      <span class="stage"><span class="dot"></span>Extract</span><span class="link"></span>
+      <span class="stage feeds" title="standing context feeds the prompt"><span class="dot"></span>Synthesize</span><span class="link lit"></span>
+      <span class="stage"><span class="dot"></span>Validate</span><span class="link lit"></span>
+      <span class="stage active"><span class="dot"></span>Registry&nbsp;ingest</span><span class="link"></span>
+      <span class="stage"><span class="dot"></span>Save&nbsp;run</span>
+    </div>
+  </div>
+
+  <nav class="dotnav" aria-label="Task navigation">
+    <a class="nav-link" href="#t1"><span class="lbl">intel_db schema</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t2"><span class="lbl">Finding extraction</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t3"><span class="lbl">Similarity shortlist</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t4"><span class="lbl">Match + predictions</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t5"><span class="lbl">Ingest + CLI</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t6"><span class="lbl">Validator finding_id</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t7"><span class="lbl">Standing context</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t8"><span class="lbl">seed_registry</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t9"><span class="lbl">Runbook + verify</span><span class="pip"></span></a>
+  </nav>
+
+  <main class="doc">
+    <div class="wrap">
+      <div class="doc-head">
+        <span class="badge badge-plan">Implementation plan</span>
+        <h1>M1 — Findings Registry<br>+ Prediction Capture</h1>
+        <p class="lead">A SQLite registry that ingests validated synthesis output, matches findings across runs, and feeds open findings back into the prompt as delta-only standing context — while capturing implied predictions.</p>
+        <div class="facts">
+          <span class="chip">branch <b>m1-registry</b></span>
+          <span class="chip"><b>9</b> tasks · TDD</span>
+          <span class="chip"><b>5</b> new scripts</span>
+          <span class="chip">subagent-driven</span>
+          <span class="chip">2026-06-10</span>
+        </div>
+        <div class="toolbar">
+          <button class="link" id="expand-all">Expand all</button>
+          <button class="link" id="collapse-all">Collapse all</button>
+          <span class="src">Source: <code>plans/2026-06-10-m1-findings-registry.md</code></span>
+        </div>
+      </div>
+
+      <h2 id="overview">Overview</h2>
+
+      <div class="kv">
+        <div class="row"><div class="k">Architecture</div><div class="v">New <code>data/intel.db</code> (SQLite, schema in <span class="script-pill">scripts/intel_db.py</span>) holds findings, append-only status events, predictions, articles, and embeddings. <span class="script-pill">registry_ingest.py</span> runs after <span class="script-pill">synthesis_validator</span> passes and before <span class="script-pill">save_run.py</span>: it extracts findings from the freeform envelope, embeds them (<code>text-embedding-3-small</code>), shortlists registry matches by cosine + evidence overlap, confirms with a cheap LLM call, then records events or inserts new rows. <span class="script-pill">build_standing_context.py</span> renders open findings into the synthesis prompt; the validator gains <code>finding_id</code> membership checking.</div></div>
+        <div class="row"><div class="k">Tech stack</div><div class="v">Python 3 stdlib (<code>sqlite3</code>, <code>array</code>, <code>hashlib</code>), OpenAI SDK (already a dependency — the <span class="script-pill">batch_extract.py</span> pattern), <code>unittest</code>.</div></div>
+        <div class="row"><div class="k">Spec</div><div class="v"><a href="target-architecture.html">Target Architecture Sequencing</a> — <code>docs/superpowers/specs/2026-06-10-target-architecture-sequencing-design.md</code></div></div>
+      </div>
+
+      <div class="callout">
+        <strong>One deliberate adaptation from the spec.</strong> The no-weekly-reruns gate (&ldquo;near-duplicate of an open finding without a <code>finding_updates</code> reference&rdquo;) runs as a pre-promotion <strong>exit-code gate in <code>registry_ingest.py</code></strong>, not inside the validator's model-retry loop — the validator is pure/mechanical and has no embedding access. Same enforcement point (nothing un-gated reaches <code>save_run</code>), different mechanism.
+      </div>
+
+      <div class="callout warn">
+        <strong>Post-review deviations (final review, same day).</strong> <code>registry_ingest.py</code> refuses to run without an existing <code>data/intel.db</code> (seed first — prevents silently flipping the pipeline into registry mode); <code>finding_updates</code> statuses outside the advertised four (<code>strengthened&nbsp;|&nbsp;weakened&nbsp;|&nbsp;confirmed&nbsp;|&nbsp;refuted</code>) are gated, never coerced; unknown <code>finding_id</code>s in updates gate instead of crashing; <code>seed_registry.py</code> only ingests <code>gpt55</code>/<code>opus</code> lanes by default (<code>--lanes</code>); synthesis-time <code>valid_finding_ids</code> covers ACTIVE findings only. Deferred knowingly: db schema-version stamping in the save_run manifest (do before M2 migrations); standing-context mechanism one-liners (token economy); prediction extraction from delta-only finding_updates.
+      </div>
+
+      <h2 id="context">Context for an engineer new to this repo</h2>
+      <ul>
+        <li>Scripts live in <code>scripts/</code>, run as <code>python3 scripts/&lt;name&gt;.py</code>, and contain both library functions and a CLI <code>main()</code>. Tests import them via an <code>importlib</code> loader. Run with <code>python3 -m unittest tests.&lt;module&gt; -v</code> from the repo root.</li>
+        <li>The two synthesis lanes produce <strong>different freeform JSON envelopes</strong>. GPT-5.5: top-level lists like <code>whole_corpus_findings</code>, items have <code>finding</code>/<code>explanation</code>/<code>why_it_matters</code>/<code>evidence</code>. Opus: <code>findings</code> items have <code>title</code>/<code>statement</code>/<code>evidence</code>. The only structural constant (enforced by <span class="script-pill">synthesis_validator.py</span>) is that <code>evidence</code> is a list of dicts each carrying an exact <code>article_id</code>. Finding extraction must be structural, not schema-bound.</li>
+        <li><span class="script-pill">scripts/lib.py</span> provides: <code>DATA_DIR</code>, <code>WORKING_NEWSLETTERS_PATH</code>, <code>DEFAULT_OPENAI_MODEL</code> (<code>'gpt-5.5'</code>), <code>load_json</code>, <code>newsletter_openai_api_key()</code>, <code>tmp_run_slug()</code>, <code>tmp_artifact_dir()</code>, <code>deep_synthesis_lane_json_paths()</code>.</li>
+        <li>The OpenAI structured-output call pattern lives in <code>scripts/batch_extract.py:59-90</code>.</li>
+        <li><code>data/intel.db</code> is committed to git. A bad ingest is undone with <code>git checkout -- data/intel.db</code>.</li>
+      </ul>
+
+      <h2 id="files">File structure</h2>
+      <table class="grid">
+        <thead><tr><th>File</th><th>Responsibility</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">scripts/intel_db.py</span> <span class="tag create">create</span></td><td>Schema, connection, ID hashing, row accessors. The only module that writes SQL.</td></tr>
+          <tr><td><span class="mono">scripts/registry_ingest.py</span> <span class="tag create">create</span></td><td>Finding extraction from envelopes, similarity shortlist, LLM match-confirm, prediction extraction, ingest orchestration, CLI.</td></tr>
+          <tr><td><span class="mono">scripts/build_standing_context.py</span> <span class="tag create">create</span></td><td>Render active findings as the prompt block; CLI prints it.</td></tr>
+          <tr><td><span class="mono">scripts/seed_registry.py</span> <span class="tag create">create</span></td><td>One-shot bootstrap from <code>data/runs/</code>, then stale-out of old findings.</td></tr>
+          <tr><td><span class="mono">scripts/synthesis_validator.py</span> <span class="tag modify">modify</span></td><td><code>finding_id</code> membership check, threaded through <code>run_with_validation</code>.</td></tr>
+          <tr><td><span class="mono">scripts/run_deep_synthesis.py</span> <span class="tag modify">modify</span></td><td>Inject standing context into the prompt; pass <code>valid_finding_ids</code> to validation; record in meta.</td></tr>
+          <tr><td><span class="mono">SYNTHESIS_RUNBOOK.md</span> <span class="tag doc">doc</span></td><td>Registry ingest step between synthesis review and <code>save_run</code>.</td></tr>
+          <tr><td>Tests <span class="tag test">test</span></td><td><code>test_intel_db.py</code>, <code>test_registry_ingest.py</code>, <code>test_standing_context.py</code>, <code>test_seed_registry.py</code>, additions to <code>test_synthesis_validator.py</code>.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="timeline">
+        <div class="tl-label">Tasks · TDD · subagent-driven</div>
+      <!-- TASK 1 -->
+      <details class="task" id="t1" open>
+        <summary><span class="chev">&#9656;</span><span class="tnum">1</span><span class="ttitle">intel_db.py — schema and accessors</span>
+          <span class="files"><span class="tag create">intel_db.py</span><span class="tag test">test_intel_db.py</span></span></summary>
+        <div class="body">
+          <div class="step"><div class="step-head"><span class="box"></span>Step 1 · Write the failing tests</div>
+            <pre class="code"><script type="text/plain" class="src">import importlib.util
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / 'scripts'
+sys.path.insert(0, str(SCRIPTS))
+
+
+def load_module(name, filename):
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / filename)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+idb = load_module('intel_db_test', 'intel_db.py')
+
+
+class IntelDbTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.conn = idb.connect(Path(self.tmp.name) / 'intel.db')
+
+    def tearDown(self):
+        self.conn.close()
+        self.tmp.cleanup()
+
+    def _insert(self, fid='fnd-aaaaaaaaaa', run='2026-06-01-x'):
+        idb.insert_finding(
+            self.conn, finding_id=fid, headline='H',
+            mechanism_text='M', evidence_ids=['article-b', 'article-a'],
+            run_slug=run)
+        return fid
+
+    def test_insert_finding_opens_with_event(self):
+        fid = self._insert()
+        row = self.conn.execute(
+            'SELECT * FROM findings WHERE finding_id = ?', (fid,)).fetchone()
+        self.assertEqual(row['status'], 'open')
+        self.assertEqual(row['first_seen_run'], '2026-06-01-x')
+        event = idb.last_event(self.conn, fid)
+        self.assertEqual(event['transition'], 'new->open')
+
+    def test_apply_event_folds_status(self):
+        fid = self._insert()
+        idb.apply_event(self.conn, finding_id=fid, run_slug='2026-06-08-y',
+                        new_status='strengthened', delta_text='more evidence')
+        row = self.conn.execute(
+            'SELECT * FROM findings WHERE finding_id = ?', (fid,)).fetchone()
+        self.assertEqual(row['status'], 'strengthened')
+        self.assertEqual(row['last_updated_run'], '2026-06-08-y')
+        self.assertEqual(idb.last_event(self.conn, fid)['transition'],
+                         'open->strengthened')
+
+    def test_apply_event_rejects_unknown_status(self):
+        fid = self._insert()
+        with self.assertRaises(ValueError):
+            idb.apply_event(self.conn, finding_id=fid, run_slug='r',
+                            new_status='bogus')
+
+    def test_active_findings_excludes_terminal_statuses(self):
+        fid = self._insert()
+        self._insert(fid='fnd-bbbbbbbbbb')
+        idb.apply_event(self.conn, finding_id=fid, run_slug='r',
+                        new_status='stale')
+        active = idb.active_findings(self.conn)
+        self.assertEqual([r['finding_id'] for r in active],
+                         ['fnd-bbbbbbbbbb'])
+
+    def test_embedding_roundtrip(self):
+        idb.put_embedding(self.conn, object_type='finding',
+                          object_id='fnd-aaaaaaaaaa',
+                          model='text-embedding-3-small',
+                          vector=[0.5, -1.25, 3.0])
+        got = idb.embeddings_for_type(self.conn, 'finding',
+                                      'text-embedding-3-small')
+        self.assertEqual(list(got), ['fnd-aaaaaaaaaa'])
+        self.assertEqual(got['fnd-aaaaaaaaaa'], [0.5, -1.25, 3.0])
+
+    def test_finding_id_is_stable_and_order_insensitive(self):
+        a = idb.finding_id_for('Headline', ['article-x', 'article-y'])
+        b = idb.finding_id_for('Headline', ['article-y', 'article-x'])
+        self.assertEqual(a, b)
+        self.assertTrue(a.startswith('fnd-'))
+        self.assertEqual(len(a), 14)
+
+    def test_prediction_insert_is_idempotent(self):
+        pid1 = idb.insert_prediction(
+            self.conn, source='finding', source_ref='fnd-aaaaaaaaaa',
+            statement='X will exit by Q3', falsifiable_by='2026-09-30')
+        pid2 = idb.insert_prediction(
+            self.conn, source='finding', source_ref='fnd-aaaaaaaaaa',
+            statement='X will exit by Q3', falsifiable_by='2026-09-30')
+        self.assertEqual(pid1, pid2)
+        count = self.conn.execute(
+            'SELECT COUNT(*) FROM predictions').fetchone()[0]
+        self.assertEqual(count, 1)
+
+    def test_upsert_article_keeps_existing_values(self):
+        idb.upsert_article(self.conn, article_id='article-a',
+                           author='A. Author', publication='Stratechery',
+                           run_slug='r1')
+        idb.upsert_article(self.conn, article_id='article-a', run_slug='r2')
+        row = self.conn.execute(
+            'SELECT * FROM articles WHERE article_id = ?',
+            ('article-a',)).fetchone()
+        self.assertEqual(row['author'], 'A. Author')
+        self.assertEqual(row['first_seen_run'], 'r1')
+
+
+if __name__ == '__main__':
+    unittest.main()</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 2 · Run tests to verify they fail</div>
+            <p class="expect"><span class="run">python3 -m unittest tests.test_intel_db -v</span><br>Expected: FAIL at module load (cannot load <code>intel_db.py</code>).</p>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Write the implementation</div>
+            <pre class="code"><script type="text/plain" class="src">"""SQLite home for cross-run longitudinal state (``data/intel.db``).
+
+Schema per docs/superpowers/specs/2026-06-10-target-architecture-sequencing-design.md.
+M1 populates findings, finding_events, predictions, articles, and
+``finding``-type embeddings; M2 adds digest/claim rows; M3 adds edges.
+Run artifacts stay flat JSON — this DB holds only state that must survive
+across runs. ``finding_events`` is append-only; ``findings.status`` is the
+fold of its events and is denormalized onto the findings row for queries.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import sqlite3
+from array import array
+from pathlib import Path
+
+from lib import DATA_DIR
+
+DEFAULT_DB_PATH = DATA_DIR / 'intel.db'
+
+FINDING_STATUSES = ('open', 'strengthened', 'weakened', 'confirmed',
+                    'refuted', 'stale')
+# Statuses still injected into the synthesis standing context.
+ACTIVE_STATUSES = ('open', 'strengthened', 'weakened')
+
+SCHEMA_SQL = """
+CREATE TABLE IF NOT EXISTS findings (
+    finding_id TEXT PRIMARY KEY,
+    headline TEXT NOT NULL,
+    mechanism_text TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'open',
+    evidence TEXT NOT NULL,
+    first_seen_run TEXT NOT NULL,
+    last_updated_run TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS finding_events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    finding_id TEXT NOT NULL REFERENCES findings(finding_id),
+    run_slug TEXT NOT NULL,
+    transition TEXT NOT NULL,
+    delta_text TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS predictions (
+    prediction_id TEXT PRIMARY KEY,
+    source TEXT NOT NULL CHECK (source IN ('finding', 'digest')),
+    source_ref TEXT NOT NULL,
+    statement TEXT NOT NULL,
+    falsifiable_by TEXT,
+    status TEXT NOT NULL DEFAULT 'open',
+    resolved_by_article_id TEXT,
+    resolved_at TEXT,
+    resolution_notes TEXT
+);
+CREATE TABLE IF NOT EXISTS articles (
+    article_id TEXT PRIMARY KEY,
+    published_at TEXT,
+    author TEXT,
+    publication TEXT,
+    first_seen_run TEXT,
+    outcome_annotations TEXT NOT NULL DEFAULT '[]'
+);
+CREATE TABLE IF NOT EXISTS embeddings (
+    object_type TEXT NOT NULL
+        CHECK (object_type IN ('finding', 'digest', 'claim')),
+    object_id TEXT NOT NULL,
+    model TEXT NOT NULL,
+    vector BLOB NOT NULL,
+    PRIMARY KEY (object_type, object_id, model)
+);
+"""
+
+
+def connect(db_path=DEFAULT_DB_PATH):
+    path = Path(db_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    conn.executescript(SCHEMA_SQL)
+    return conn
+
+
+def vector_to_blob(vector):
+    return array('f', vector).tobytes()
+
+
+def blob_to_vector(blob):
+    values = array('f')
+    values.frombytes(blob)
+    return list(values)
+
+
+def finding_id_for(headline, evidence_ids):
+    digest = hashlib.sha1(
+        (headline.strip() + '|' + ','.join(sorted(evidence_ids)))
+        .encode('utf-8')).hexdigest()
+    return f'fnd-{digest[:10]}'
+
+
+def insert_finding(conn, *, finding_id, headline, mechanism_text,
+                   evidence_ids, run_slug, status='open'):
+    conn.execute(
+        'INSERT INTO findings (finding_id, headline, mechanism_text, status,'
+        ' evidence, first_seen_run, last_updated_run)'
+        ' VALUES (?, ?, ?, ?, ?, ?, ?)',
+        (finding_id, headline, mechanism_text, status,
+         json.dumps(sorted(evidence_ids)), run_slug, run_slug))
+    conn.execute(
+        'INSERT INTO finding_events (finding_id, run_slug, transition)'
+        ' VALUES (?, ?, ?)', (finding_id, run_slug, f'new->{status}'))
+    conn.commit()
+
+
+def apply_event(conn, *, finding_id, run_slug, new_status, delta_text=''):
+    if new_status not in FINDING_STATUSES:
+        raise ValueError(f'unknown finding status {new_status!r}')
+    row = conn.execute('SELECT status FROM findings WHERE finding_id = ?',
+                       (finding_id,)).fetchone()
+    if row is None:
+        raise KeyError(f'no such finding {finding_id!r}')
+    conn.execute(
+        'INSERT INTO finding_events'
+        ' (finding_id, run_slug, transition, delta_text)'
+        ' VALUES (?, ?, ?, ?)',
+        (finding_id, run_slug, f'{row["status"]}->{new_status}', delta_text))
+    conn.execute(
+        'UPDATE findings SET status = ?, last_updated_run = ?'
+        ' WHERE finding_id = ?', (new_status, run_slug, finding_id))
+    conn.commit()
+
+
+def active_findings(conn):
+    marks = ','.join('?' * len(ACTIVE_STATUSES))
+    return conn.execute(
+        f'SELECT * FROM findings WHERE status IN ({marks})'
+        ' ORDER BY first_seen_run, finding_id', ACTIVE_STATUSES).fetchall()
+
+
+def last_event(conn, finding_id):
+    return conn.execute(
+        'SELECT * FROM finding_events WHERE finding_id = ?'
+        ' ORDER BY event_id DESC LIMIT 1', (finding_id,)).fetchone()
+
+
+def put_embedding(conn, *, object_type, object_id, model, vector):
+    conn.execute(
+        'INSERT OR REPLACE INTO embeddings'
+        ' (object_type, object_id, model, vector) VALUES (?, ?, ?, ?)',
+        (object_type, object_id, model, vector_to_blob(vector)))
+    conn.commit()
+
+
+def embeddings_for_type(conn, object_type, model):
+    rows = conn.execute(
+        'SELECT object_id, vector FROM embeddings'
+        ' WHERE object_type = ? AND model = ?',
+        (object_type, model)).fetchall()
+    return {row['object_id']: blob_to_vector(row['vector']) for row in rows}
+
+
+def insert_prediction(conn, *, source, source_ref, statement, falsifiable_by):
+    digest = hashlib.sha1(
+        f'{source_ref}|{statement}'.encode('utf-8')).hexdigest()
+    prediction_id = f'prd-{digest[:10]}'
+    conn.execute(
+        'INSERT OR IGNORE INTO predictions'
+        ' (prediction_id, source, source_ref, statement, falsifiable_by)'
+        ' VALUES (?, ?, ?, ?, ?)',
+        (prediction_id, source, source_ref, statement, falsifiable_by))
+    conn.commit()
+    return prediction_id
+
+
+def upsert_article(conn, *, article_id, published_at=None, author=None,
+                   publication=None, run_slug=None):
+    conn.execute(
+        'INSERT INTO articles'
+        ' (article_id, published_at, author, publication, first_seen_run)'
+        ' VALUES (?, ?, ?, ?, ?)'
+        ' ON CONFLICT(article_id) DO UPDATE SET'
+        '  published_at = COALESCE(excluded.published_at, published_at),'
+        '  author = COALESCE(excluded.author, author),'
+        '  publication = COALESCE(excluded.publication, publication)',
+        (article_id, published_at, author, publication, run_slug))
+    conn.commit()</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 4 · Run tests to verify they pass</div>
+            <p class="expect ok"><span class="run">python3 -m unittest tests.test_intel_db -v</span> &mdash; all 8 tests PASS</p>
+          </div>
+          <div class="commit-bar"><span class="label">Step 5 · commit</span><code>feat: intel.db schema and accessors (M1 registry storage)</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 2 -->
+      <details class="task" id="t2">
+        <summary><span class="chev">&#9656;</span><span class="tnum">2</span><span class="ttitle">Finding extraction from freeform envelopes</span>
+          <span class="files"><span class="tag create">registry_ingest.py</span><span class="tag test">test_registry_ingest.py</span></span></summary>
+        <div class="body">
+          <p class="files-line">Extraction functions only; orchestration and CLI come in Tasks 3&ndash;5.</p>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 1 · Failing tests</div>
+            <pre class="code"><script type="text/plain" class="src">ri = load_module('registry_ingest_test', 'registry_ingest.py')
+
+
+def ev(aid):
+    return {'article_id': aid, 'contribution': 'c'}
+
+
+GPT_PAYLOAD = {
+    'corpus_window': {'start': '2026-06-02', 'end': '2026-06-09'},
+    'whole_corpus_findings': [
+        {'finding': 'Agents need operating layers.',
+         'explanation': 'Mechanism text here.',
+         'why_it_matters': 'Because.',
+         'evidence': [ev('article-aaaa'), ev('article-bbbb')]},
+    ],
+    'tensions_limitations_and_omissions': [
+        {'point': 'Chartbook is never cited.',
+         'why_it_matters': 'Blind spot.',
+         'evidence': [ev('article-cccc')]},
+    ],
+}
+
+OPUS_PAYLOAD = {
+    'corpus_summary': 'No findings in prose here.',
+    'findings': [
+        {'title': 'Monetization squeeze',
+         'statement': 'The squeeze is revealed preference.',
+         'evidence': [ev('article-dddd')]},
+    ],
+}
+
+
+class IterFindingsTest(unittest.TestCase):
+    def test_gpt_shaped_envelope(self):
+        found = list(ri.iter_findings(GPT_PAYLOAD))
+        self.assertEqual(len(found), 2)
+        first = found[0]
+        self.assertEqual(first['headline'], 'Agents need operating layers.')
+        self.assertEqual(first['mechanism_text'],
+                         'Mechanism text here. Because.')
+        self.assertEqual(first['evidence_ids'],
+                         ['article-aaaa', 'article-bbbb'])
+        self.assertEqual(found[1]['headline'], 'Chartbook is never cited.')
+
+    def test_opus_shaped_envelope_uses_statement_as_mechanism(self):
+        found = list(ri.iter_findings(OPUS_PAYLOAD))
+        self.assertEqual(len(found), 1)
+        self.assertEqual(found[0]['headline'], 'Monetization squeeze')
+        self.assertEqual(found[0]['mechanism_text'],
+                         'The squeeze is revealed preference.')
+
+    def test_dict_without_structured_evidence_is_not_a_finding(self):
+        payload = {'findings': [{'title': 'T', 'evidence': ['article-x']}]}
+        self.assertEqual(list(ri.iter_findings(payload)), [])
+
+    def test_iter_finding_updates(self):
+        payload = {
+            'finding_updates': [
+                {'finding_id': 'fnd-0123456789', 'delta': 'investor exited',
+                 'suggested_status': 'strengthened'},
+                {'not_an_update': True},
+            ],
+            'nested': {'finding_updates': [
+                {'finding_id': 'fnd-abcdef0123', 'delta': 'd'}]},
+        }
+        updates = list(ri.iter_finding_updates(payload))
+        self.assertEqual([u['finding_id'] for u in updates],
+                         ['fnd-0123456789', 'fnd-abcdef0123'])</script></pre>
+            <p class="expect">(Prefixed by the same <code>load_module</code> boilerplate as Task 1.)</p>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Implementation — <code>scripts/registry_ingest.py</code></div>
+            <pre class="code"><script type="text/plain" class="src">"""Ingest validated synthesis output into the findings registry (M1).
+
+Runs after synthesis validation passes and before save_run promotion.
+For each finding in the output: embed headline+mechanism, shortlist
+active registry findings by cosine + evidence overlap, confirm matches
+with a cheap structured-output call, then record a status event or
+insert a new open finding. Implied predictions are extracted from new
+and updated findings.
+
+Exit code 1 when a finding repeats an open registry finding with no
+``finding_updates`` reference (the no-weekly-reruns gate); the printed
+review table shows why. Undo a bad ingest with
+``git checkout -- data/intel.db``.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+
+import intel_db
+from lib import (
+    DEFAULT_OPENAI_MODEL,
+    WORKING_NEWSLETTERS_PATH,
+    deep_synthesis_lane_json_paths,
+    load_json,
+    newsletter_openai_api_key,
+    tmp_artifact_dir,
+    tmp_run_slug,
+)
+
+EMBEDDING_MODEL = 'text-embedding-3-small'
+DEFAULT_REASONING_EFFORT = 'low'
+
+# Priority order: first matching key becomes the headline; the remaining
+# string fields concatenate into mechanism_text.
+HEADLINE_KEYS = ('finding', 'title', 'headline', 'link', 'point', 'statement')
+
+SHORTLIST_MIN_COSINE = 0.55
+NEAR_DUPLICATE_COSINE = 0.92
+MAX_SHORTLIST = 3
+
+
+def _evidence_ids(value):
+    """Return article_ids when *value* is a structured evidence list, else None."""
+    if not isinstance(value, list) or not value:
+        return None
+    ids = []
+    for item in value:
+        if isinstance(item, dict) and isinstance(item.get('article_id'), str):
+            ids.append(item['article_id'])
+        else:
+            return None
+    return ids
+
+
+def iter_findings(payload, path='$'):
+    """Yield finding dicts from any synthesis envelope.
+
+    The output envelope is freeform (the two lanes use different shapes),
+    so a finding is recognized structurally: any dict carrying an
+    ``evidence`` list of structured article refs plus a headline-like
+    string field.
+    """
+    if isinstance(payload, dict):
+        evidence = _evidence_ids(payload.get('evidence'))
+        if evidence is not None:
+            headline_key = next(
+                (k for k in HEADLINE_KEYS
+                 if isinstance(payload.get(k), str) and payload[k].strip()),
+                None)
+            if headline_key:
+                mechanism = ' '.join(
+                    value.strip() for key, value in payload.items()
+                    if isinstance(value, str) and key != headline_key
+                    and value.strip())
+                yield {
+                    'headline': payload[headline_key].strip(),
+                    'mechanism_text': mechanism,
+                    'evidence_ids': evidence,
+                    'path': path,
+                }
+                return
+        for key, value in payload.items():
+            yield from iter_findings(value, f'{path}.{key}')
+    elif isinstance(payload, list):
+        for idx, item in enumerate(payload):
+            yield from iter_findings(item, f'{path}[{idx}]')
+
+
+def iter_finding_updates(payload):
+    """Yield explicit {finding_id, delta, suggested_status} update dicts."""
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            if key == 'finding_updates' and isinstance(value, list):
+                for item in value:
+                    if (isinstance(item, dict)
+                            and isinstance(item.get('finding_id'), str)):
+                        yield item
+            else:
+                yield from iter_finding_updates(value)
+    elif isinstance(payload, list):
+        for item in payload:
+            yield from iter_finding_updates(item)</script></pre>
+          </div>
+          <p class="expect ok">Steps 2 &amp; 4: 4 tests fail at module load, then PASS.</p>
+          <div class="commit-bar"><span class="label">Step 5 · commit</span><code>feat: envelope-agnostic finding extraction for the registry</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 3 -->
+      <details class="task" id="t3">
+        <summary><span class="chev">&#9656;</span><span class="tnum">3</span><span class="ttitle">Similarity shortlist</span>
+          <span class="files"><span class="tag modify">registry_ingest.py</span><span class="tag test">test_registry_ingest.py</span></span></summary>
+        <div class="body">
+          <div class="step"><div class="step-head"><span class="box"></span>Step 1 · Failing tests (append <code>ShortlistTest</code>)</div>
+            <pre class="code"><script type="text/plain" class="src">class ShortlistTest(unittest.TestCase):
+    def _row(self, fid, evidence):
+        import json as _json
+        return {'finding_id': fid, 'headline': 'H', 'mechanism_text': 'M',
+                'evidence': _json.dumps(evidence), 'status': 'open',
+                'first_seen_run': 'r0', 'last_updated_run': 'r0'}
+
+    def test_cosine(self):
+        self.assertAlmostEqual(ri.cosine([1, 0], [1, 0]), 1.0)
+        self.assertAlmostEqual(ri.cosine([1, 0], [0, 1]), 0.0)
+        self.assertEqual(ri.cosine([0, 0], [1, 1]), 0.0)
+
+    def test_shortlist_orders_by_blended_score(self):
+        candidates = [
+            (self._row('fnd-close', ['article-z']), [1.0, 0.0]),
+            (self._row('fnd-far', ['article-z']), [0.0, 1.0]),
+        ]
+        short = ri.shortlist_candidates([1.0, 0.0], ['article-q'], candidates)
+        self.assertEqual([row['finding_id'] for _s, _c, row in short],
+                         ['fnd-close'])
+
+    def test_evidence_overlap_rescues_low_cosine(self):
+        candidates = [(self._row('fnd-shared', ['article-q']), [0.0, 1.0])]
+        short = ri.shortlist_candidates([1.0, 0.0], ['article-q'], candidates)
+        self.assertEqual(len(short), 1)
+
+    def test_shortlist_caps_at_max(self):
+        candidates = [
+            (self._row(f'fnd-{i:010d}', ['article-q']), [1.0, 0.0])
+            for i in range(5)
+        ]
+        short = ri.shortlist_candidates([1.0, 0.0], ['article-q'], candidates)
+        self.assertEqual(len(short), ri.MAX_SHORTLIST)</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Implementation (append)</div>
+            <pre class="code"><script type="text/plain" class="src">def cosine(a, b):
+    dot = sum(x * y for x, y in zip(a, b))
+    norm_a = math.sqrt(sum(x * x for x in a))
+    norm_b = math.sqrt(sum(y * y for y in b))
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return dot / (norm_a * norm_b)
+
+
+def evidence_overlap(a_ids, b_ids):
+    a, b = set(a_ids), set(b_ids)
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
+
+
+def shortlist_candidates(new_vector, new_evidence_ids, candidates):
+    """Score (finding_row, vector) pairs against a new finding.
+
+    Returns up to MAX_SHORTLIST entries as (score, cosine, row),
+    best-first. A candidate qualifies via embedding similarity or via any
+    shared evidence article.
+    """
+    scored = []
+    for row, vector in candidates:
+        cos = cosine(new_vector, vector)
+        overlap = evidence_overlap(new_evidence_ids,
+                                   json.loads(row['evidence']))
+        if cos < SHORTLIST_MIN_COSINE and overlap == 0.0:
+            continue
+        scored.append((0.8 * cos + 0.2 * overlap, cos, row))
+    scored.sort(key=lambda item: -item[0])
+    return scored[:MAX_SHORTLIST]</script></pre>
+          </div>
+          <p class="expect ok">All 8 tests in the file PASS.</p>
+          <div class="commit-bar"><span class="label">Step 5 · commit</span><code>feat: registry match shortlist (cosine + evidence overlap)</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 4 -->
+      <details class="task" id="t4">
+        <summary><span class="chev">&#9656;</span><span class="tnum">4</span><span class="ttitle">LLM match-confirm and prediction extraction</span>
+          <span class="files"><span class="tag modify">registry_ingest.py</span><span class="tag test">test_registry_ingest.py</span></span></summary>
+        <div class="body">
+          <div class="step"><div class="step-head"><span class="box"></span>Step 1 · Failing tests + fake client</div>
+            <pre class="code"><script type="text/plain" class="src">import json as json_mod
+from types import SimpleNamespace
+
+
+class FakeCompletions:
+    def __init__(self, payloads):
+        self.payloads = list(payloads)
+        self.calls = []
+
+    def create(self, **kwargs):
+        self.calls.append(kwargs)
+        content = json_mod.dumps(self.payloads.pop(0))
+        message = SimpleNamespace(content=content)
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+
+class FakeClient:
+    def __init__(self, payloads):
+        self.chat = SimpleNamespace(completions=FakeCompletions(payloads))
+
+
+class LlmCallsTest(unittest.TestCase):
+    def test_confirm_match_passes_schema_and_parses(self):
+        client = FakeClient([{'same_finding': True,
+                              'relation': 'strengthened',
+                              'delta': 'investor exited'}])
+        new = {'headline': 'NH', 'mechanism_text': 'NM'}
+        row = {'headline': 'OH', 'mechanism_text': 'OM'}
+        verdict = ri.confirm_match(client, 'gpt-5.5', 'low', new, row)
+        self.assertTrue(verdict['same_finding'])
+        call = client.chat.completions.calls[0]
+        self.assertEqual(call['model'], 'gpt-5.5')
+        self.assertEqual(call['reasoning_effort'], 'low')
+        self.assertEqual(call['response_format']['json_schema']['name'],
+                         'finding_match')
+        self.assertIn('NH', call['messages'][0]['content'])
+        self.assertIn('OH', call['messages'][0]['content'])
+
+    def test_extract_predictions_returns_list(self):
+        client = FakeClient([{'predictions': [
+            {'statement': 'X exits by Q3', 'falsifiable_by': '2026-09-30'}]}])
+        finding = {'headline': 'H', 'mechanism_text': 'M'}
+        predictions = ri.extract_predictions(client, 'gpt-5.5', 'low', finding)
+        self.assertEqual(predictions[0]['falsifiable_by'], '2026-09-30')</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Implementation (append; mirrors <code>batch_extract.py:59-90</code>)</div>
+            <pre class="code"><script type="text/plain" class="src">MATCH_SCHEMA = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'same_finding': {'type': 'boolean'},
+        'relation': {'type': 'string',
+                     'enum': ['strengthened', 'weakened', 'unchanged']},
+        'delta': {'type': 'string'},
+    },
+    'required': ['same_finding', 'relation', 'delta'],
+}
+
+PREDICTIONS_SCHEMA = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'predictions': {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'additionalProperties': False,
+                'properties': {
+                    'statement': {'type': 'string'},
+                    'falsifiable_by': {'type': 'string'},
+                },
+                'required': ['statement', 'falsifiable_by'],
+            },
+        },
+    },
+    'required': ['predictions'],
+}
+
+
+def _structured_call(client, model, reasoning_effort, schema_name, schema,
+                     prompt):
+    kwargs = {
+        'model': model,
+        'messages': [{'role': 'user', 'content': prompt}],
+        'response_format': {
+            'type': 'json_schema',
+            'json_schema': {'name': schema_name, 'schema': schema,
+                            'strict': True},
+        },
+    }
+    if reasoning_effort:
+        kwargs['reasoning_effort'] = reasoning_effort
+    response = client.chat.completions.create(**kwargs)
+    return json.loads(response.choices[0].message.content)
+
+
+def confirm_match(client, model, reasoning_effort, new_finding,
+                  candidate_row):
+    prompt = (
+        'Two findings from a newsletter-synthesis pipeline follow. Decide '
+        'whether they are the SAME underlying finding — one evolved view '
+        'of one claim about the world — not merely related topics.\n\n'
+        'REGISTRY FINDING (from a prior window):\n'
+        f'Headline: {candidate_row["headline"]}\n'
+        f'Mechanism: {candidate_row["mechanism_text"]}\n\n'
+        'NEW FINDING (this window):\n'
+        f'Headline: {new_finding["headline"]}\n'
+        f'Mechanism: {new_finding["mechanism_text"]}\n\n'
+        'If same_finding, classify the relation: does the new text '
+        'materially strengthen, weaken, or leave unchanged the registry '
+        'finding? delta = one sentence stating the material change (empty '
+        'string when unchanged).')
+    return _structured_call(client, model, reasoning_effort,
+                            'finding_match', MATCH_SCHEMA, prompt)
+
+
+def extract_predictions(client, model, reasoning_effort, finding):
+    prompt = (
+        'Extract falsifiable predictions from this finding. Include a '
+        'prediction only when the text commits to an outcome checkable by '
+        'an explicit or clearly implied date; set falsifiable_by '
+        '(YYYY-MM-DD) from the text\'s own horizon. Vague or horizon-free '
+        'claims must be omitted entirely. Return an empty list when in '
+        'doubt.\n\n'
+        f'Headline: {finding["headline"]}\n'
+        f'Text: {finding["mechanism_text"]}')
+    result = _structured_call(client, model, reasoning_effort,
+                              'finding_predictions', PREDICTIONS_SCHEMA,
+                              prompt)
+    return result['predictions']</script></pre>
+          </div>
+          <p class="expect ok">All 10 tests PASS.</p>
+          <div class="commit-bar"><span class="label">Step 5 · commit</span><code>feat: registry match confirmation and prediction extraction calls</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 5 -->
+      <details class="task" id="t5">
+        <summary><span class="chev">&#9656;</span><span class="tnum">5</span><span class="ttitle">Ingest orchestration and CLI</span>
+          <span class="files"><span class="tag modify">registry_ingest.py</span><span class="tag test">test_registry_ingest.py</span></span></summary>
+        <div class="body">
+          <p class="files-line">Appends <code>ingest_payload</code>, helpers, and <code>main</code>. Tests cover new-insert, matched-event, same-run corroboration, the rerun gate, and explicit <code>finding_updates</code>.</p>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · <code>ingest_payload</code> orchestration</div>
+            <pre class="code"><script type="text/plain" class="src">def ingest_payload(conn, payload, *, run_slug, embed_fn, confirm_fn,
+                   predict_fn, lane=''):
+    """Ingest one synthesis payload into the registry.
+
+    Returns review-row dicts: {action, finding_id, headline, lane, gate}.
+    gate=True marks the no-weekly-reruns violation (near-duplicate of an
+    open finding with no finding_updates reference).
+    """
+    review = []
+    explicit_updates = list(iter_finding_updates(payload))
+    referenced_ids = {u['finding_id'] for u in explicit_updates}
+    for update in explicit_updates:
+        status = update.get('suggested_status', 'strengthened')
+        if status not in intel_db.FINDING_STATUSES:
+            status = 'strengthened'
+        intel_db.apply_event(conn, finding_id=update['finding_id'],
+                             run_slug=run_slug, new_status=status,
+                             delta_text=update.get('delta', ''))
+        review.append({'action': f'update->{status}',
+                       'finding_id': update['finding_id'],
+                       'headline': '', 'lane': lane, 'gate': False})
+
+    findings = list(iter_findings(payload))
+    if not findings:
+        return review
+    vectors = embed_fn(
+        [f'{f["headline"]}\n{f["mechanism_text"]}' for f in findings])
+    stored = intel_db.embeddings_for_type(conn, 'finding', EMBEDDING_MODEL)
+    active = {row['finding_id']: dict(row)
+              for row in intel_db.active_findings(conn)}
+    candidates = [(active[fid], vec) for fid, vec in stored.items()
+                  if fid in active]
+
+    for finding, vector in zip(findings, vectors):
+        short = shortlist_candidates(vector, finding['evidence_ids'],
+                                     candidates)
+        match, match_cos, relation, delta = None, 0.0, '', ''
+        for _score, cos, row in short:
+            verdict = confirm_fn(finding, row)
+            if verdict['same_finding']:
+                match, match_cos = row, cos
+                relation, delta = verdict['relation'], verdict['delta']
+                break
+
+        if match is None:
+            fid = intel_db.finding_id_for(finding['headline'],
+                                          finding['evidence_ids'])
+            if conn.execute('SELECT 1 FROM findings WHERE finding_id = ?',
+                            (fid,)).fetchone():
+                review.append({'action': 'duplicate-id (skipped)',
+                               'finding_id': fid,
+                               'headline': finding['headline'],
+                               'lane': lane, 'gate': False})
+                continue
+            intel_db.insert_finding(
+                conn, finding_id=fid, headline=finding['headline'],
+                mechanism_text=finding['mechanism_text'],
+                evidence_ids=finding['evidence_ids'], run_slug=run_slug)
+            intel_db.put_embedding(conn, object_type='finding',
+                                   object_id=fid, model=EMBEDDING_MODEL,
+                                   vector=vector)
+            for prediction in predict_fn(finding):
+                intel_db.insert_prediction(
+                    conn, source='finding', source_ref=fid,
+                    statement=prediction['statement'],
+                    falsifiable_by=prediction['falsifiable_by'])
+            new_row = dict(conn.execute(
+                'SELECT * FROM findings WHERE finding_id = ?',
+                (fid,)).fetchone())
+            active[fid] = new_row
+            candidates.append((new_row, vector))
+            review.append({'action': 'new open', 'finding_id': fid,
+                           'headline': finding['headline'], 'lane': lane,
+                           'gate': False})
+            continue
+
+        fid = match['finding_id']
+        same_run = match['last_updated_run'] == run_slug
+        if same_run:
+            review.append({'action': 'corroborated (same run)',
+                           'finding_id': fid,
+                           'headline': finding['headline'], 'lane': lane,
+                           'gate': False})
+        elif relation == 'unchanged':
+            gate = (match_cos >= NEAR_DUPLICATE_COSINE
+                    and fid not in referenced_ids)
+            review.append({'action': 'rerun (no delta)' if gate
+                           else 'corroborated',
+                           'finding_id': fid,
+                           'headline': finding['headline'], 'lane': lane,
+                           'gate': gate})
+        else:
+            intel_db.apply_event(conn, finding_id=fid, run_slug=run_slug,
+                                 new_status=relation, delta_text=delta)
+            for prediction in predict_fn(finding):
+                intel_db.insert_prediction(
+                    conn, source='finding', source_ref=fid,
+                    statement=prediction['statement'],
+                    falsifiable_by=prediction['falsifiable_by'])
+            review.append({'action': f'matched->{relation}',
+                           'finding_id': fid,
+                           'headline': finding['headline'], 'lane': lane,
+                           'gate': False})
+    return review</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 (cont.) · helpers, review table, CLI <code>main</code></div>
+            <pre class="code"><script type="text/plain" class="src">def make_embed_fn(client):
+    def embed(texts):
+        response = client.embeddings.create(model=EMBEDDING_MODEL,
+                                            input=texts)
+        return [item.embedding for item in response.data]
+    return embed
+
+
+def load_article_lookup():
+    if not WORKING_NEWSLETTERS_PATH.exists():
+        return {}
+    data = load_json(WORKING_NEWSLETTERS_PATH)
+    return {row['article_id']: row for row in data.get('newsletters', [])
+            if isinstance(row, dict) and row.get('article_id')}
+
+
+def upsert_cited_articles(conn, run_slug):
+    lookup = load_article_lookup()
+    cited = set()
+    for row in conn.execute('SELECT evidence FROM findings'):
+        cited.update(json.loads(row['evidence']))
+    for article_id in sorted(cited):
+        meta = lookup.get(article_id, {})
+        intel_db.upsert_article(
+            conn, article_id=article_id,
+            published_at=meta.get('published_at'),
+            author=meta.get('author'), publication=meta.get('source'),
+            run_slug=run_slug)
+
+
+def print_review(review):
+    print(f'{"action":<24} {"finding_id":<15} {"lane":<6} headline')
+    for row in review:
+        flag = '  <-- GATE' if row['gate'] else ''
+        print(f'{row["action"]:<24} {row["finding_id"]:<15} '
+              f'{row["lane"]:<6} {row["headline"]}{flag}')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--tmp-run',
+                        help='tmp run slug under data/tmp '
+                             '(default: NEWSLETTER_TMP_RUN or today)')
+    parser.add_argument('--db', default=str(intel_db.DEFAULT_DB_PATH))
+    parser.add_argument('--model', default=DEFAULT_OPENAI_MODEL)
+    parser.add_argument('--reasoning-effort',
+                        choices=['low', 'medium', 'high'],
+                        default=DEFAULT_REASONING_EFFORT)
+    parser.add_argument('--run-slug',
+                        help='registry run label (default: tmp run slug)')
+    args = parser.parse_args()
+
+    import openai
+    client = openai.OpenAI(api_key=newsletter_openai_api_key())
+
+    slug = tmp_run_slug(args.tmp_run)
+    synthesis_dir = tmp_artifact_dir('synthesis', slug)
+    json_paths = [p for p in deep_synthesis_lane_json_paths(synthesis_dir)
+                  if p.exists()]
+    if not json_paths:
+        raise SystemExit(f'no synthesis lane JSON found in {synthesis_dir}')
+
+    run_slug = args.run_slug or slug
+    conn = intel_db.connect(args.db)
+    embed_fn = make_embed_fn(client)
+    review = []
+    for path in json_paths:
+        payload = load_json(path)
+        lane = path.stem.split('.')[-1]
+
+        def confirm_fn(new, row):
+            return confirm_match(client, args.model, args.reasoning_effort,
+                                 new, row)
+
+        def predict_fn(finding):
+            return extract_predictions(client, args.model,
+                                       args.reasoning_effort, finding)
+
+        review.extend(ingest_payload(
+            conn, payload, run_slug=run_slug, embed_fn=embed_fn,
+            confirm_fn=confirm_fn, predict_fn=predict_fn, lane=lane))
+
+    upsert_cited_articles(conn, run_slug)
+    print_review(review)
+    gates = [row for row in review if row['gate']]
+    if gates:
+        print(f'\n{len(gates)} finding(s) repeat an open registry finding '
+              'with no finding_updates reference — fix the synthesis output '
+              'or rerun before save_run. '
+              'Undo this ingest: git checkout -- data/intel.db')
+        raise SystemExit(1)
+
+
+if __name__ == '__main__':
+    main()</script></pre>
+          </div>
+          <p class="expect ok">All 15 tests in <code>test_registry_ingest</code> PASS.</p>
+          <div class="commit-bar"><span class="label">Step 5 · commit</span><code>feat: registry ingest orchestration, review table, rerun gate CLI</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 6 -->
+      <details class="task" id="t6">
+        <summary><span class="chev">&#9656;</span><span class="tnum">6</span><span class="ttitle">Validator finding_id membership</span>
+          <span class="files"><span class="tag modify">synthesis_validator.py</span><span class="tag test">test_synthesis_validator.py</span></span></summary>
+        <div class="body">
+          <p class="files-line"><code>validate_synthesis_payload</code> and <code>run_with_validation</code> gain an optional <code>valid_finding_ids</code> parameter. When provided, any <code>finding_id</code> value must be a member (mirroring article-ID membership); when absent, finding IDs are ignored — backwards compatible.</p>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Implementation sketch</div>
+            <pre class="code"><script type="text/plain" class="src">def validate_synthesis_payload(payload, valid_ids, valid_finding_ids=None):
+    """Return a list of violation dicts for *payload* against *valid_ids*.
+
+    When *valid_finding_ids* is provided, any ``finding_id`` value must be
+    a member (registry membership, mirroring article-ID membership).
+    """
+    violations = []
+
+    def check_finding_id(value, path):
+        if not isinstance(value, str) or value not in valid_finding_ids:
+            violations.append(_violation(
+                'unknown_finding_id', path,
+                f'{value!r} is not a finding_id in the standing registry'))
+
+    # ... inside walk(), the isinstance(node, dict) branch:
+    #     if key in ARTICLE_ID_KEYS:
+    #         check_id_value(value, child)
+    #     elif key == 'finding_id' and valid_finding_ids is not None:
+    #         check_finding_id(value, child)
+
+# run_with_validation signature gains the kwarg, threaded to the call:
+def run_with_validation(call_model, prompt_text, valid_ids, *, max_retries=1,
+                        label='synthesis', valid_finding_ids=None):
+    ...
+    violations = validate_synthesis_payload(
+        parsed, valid_ids, valid_finding_ids=valid_finding_ids)</script></pre>
+          </div>
+          <p class="expect ok">Known ID passes; unknown ID is an <code>unknown_finding_id</code> error; finding IDs ignored without a registry.</p>
+          <div class="commit-bar"><span class="label">commit</span><code>feat: validator checks finding_id membership against the registry</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 7 -->
+      <details class="task" id="t7">
+        <summary><span class="chev">&#9656;</span><span class="tnum">7</span><span class="ttitle">Standing context block + synthesis wiring</span>
+          <span class="files"><span class="tag create">build_standing_context.py</span><span class="tag modify">run_deep_synthesis.py</span><span class="tag test">test_standing_context.py</span></span></summary>
+        <div class="body">
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · <code>scripts/build_standing_context.py</code></div>
+            <pre class="code"><script type="text/plain" class="src">"""Render the standing-findings block injected into the synthesis prompt.
+
+Active registry findings (open/strengthened/weakened) are presented as
+known context with a delta-only instruction. Ordering is stable
+(first_seen_run, finding_id) so the block changes only when the registry
+does — prompt-cache friendly.
+"""
+
+from __future__ import annotations
+
+import argparse
+
+import intel_db
+
+UPDATE_INSTRUCTION = (
+    'The findings below are already known from prior windows. Do not '
+    'report any of them as a new finding. If this window materially '
+    'advances, weakens, confirms, or refutes one, report that as an entry '
+    'in a top-level "finding_updates" array: '
+    '[{"finding_id": "...", "delta": "<one sentence on what changed>", '
+    '"suggested_status": "strengthened|weakened|confirmed|refuted"}]. '
+    'Report only material deltas; silence means "no change".')
+
+
+def render_standing_context(conn, *, max_items=40):
+    rows = intel_db.active_findings(conn)
+    if not rows:
+        return ''
+    lines = ['## Standing findings registry', '', UPDATE_INSTRUCTION, '']
+    for row in rows[:max_items]:
+        event = intel_db.last_event(conn, row['finding_id'])
+        delta = (event['delta_text'] or '').strip() if event else ''
+        suffix = f' Last delta: {delta}' if delta else ''
+        lines.append(
+            f'- {row["finding_id"]} [{row["status"]}; first seen '
+            f'{row["first_seen_run"]}] {row["headline"]}{suffix}')
+    dropped = len(rows) - max_items
+    if dropped > 0:
+        lines.append(f'- ({dropped} older findings omitted)')
+    lines.append('')
+    return '\n'.join(lines)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--db', default=str(intel_db.DEFAULT_DB_PATH))
+    args = parser.parse_args()
+    conn = intel_db.connect(args.db)
+    print(render_standing_context(conn))
+
+
+if __name__ == '__main__':
+    main()</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 4 · Wire into <code>run_deep_synthesis.py</code></div>
+            <p class="desc">Standing context is assembled <strong>before</strong> the corpus window (it changes less often than enrichment — cache-friendlier), <code>valid_finding_ids</code> is loaded from the registry and threaded into <code>run_with_validation</code>, and <code>meta</code> records <code>standing_context_chars</code> / <code>valid_finding_ids_count</code>.</p>
+            <pre class="code"><script type="text/plain" class="src">import intel_db
+from build_standing_context import render_standing_context
+
+# render_prompt gains standing_context and inserts blocks before
+# the "Corpus window:" marker (standing context first, then enrichment):
+def render_prompt(template_path, *, newsletters_data, articles,
+                  enrichment=None, standing_context=None):
+    ...  # replacements unchanged
+    blocks = []
+    if standing_context:
+        blocks.append(standing_context)
+    if enrichment:
+        blocks.append(format_enrichment_prompt_section(enrichment))
+    if blocks:
+        section = '\n'.join(blocks)
+        idx = prompt.find('Corpus window:')
+        prompt = (prompt[:idx] + section + prompt[idx:]) if idx > 0 \
+            else section + prompt
+    return prompt
+
+# In main(), before render_prompt:
+standing_context = ''
+valid_finding_ids = None
+if intel_db.DEFAULT_DB_PATH.exists():
+    registry_conn = intel_db.connect(intel_db.DEFAULT_DB_PATH)
+    standing_context = render_standing_context(registry_conn)
+    valid_finding_ids = {
+        row['finding_id'] for row in registry_conn.execute(
+            'SELECT finding_id FROM findings')}
+    registry_conn.close()
+
+# threaded into validation:
+raw_text, parsed, validation_report = run_with_validation(
+    call_model, prompt_text, valid_ids,
+    max_retries=max(args.validate_retries, 0),
+    label=f'deep_synthesis.{args.provider}',
+    valid_finding_ids=valid_finding_ids)</script></pre>
+          </div>
+          <p class="expect ok">4 standing-context tests PASS; full suite stays green.</p>
+          <div class="commit-bar"><span class="label">commit</span><code>feat: inject standing findings registry into synthesis prompt</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 8 -->
+      <details class="task" id="t8">
+        <summary><span class="chev">&#9656;</span><span class="tnum">8</span><span class="ttitle">seed_registry.py — bootstrap from promoted runs</span>
+          <span class="files"><span class="tag create">seed_registry.py</span><span class="tag test">test_seed_registry.py</span></span></summary>
+        <div class="body">
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Implementation</div>
+            <pre class="code"><script type="text/plain" class="src">"""One-shot registry bootstrap from promoted runs in ``data/runs/``.
+
+Walks runs chronologically (directory-name order — slugs are dated),
+ingests each run's synthesis lane outputs through the same matching
+pipeline as registry_ingest, then marks findings not updated in the
+``--keep-recent`` most recent runs as stale so the standing context
+starts small. Safe to rerun on an empty db. Undo: git checkout -- data/intel.db.
+"""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+import intel_db
+from lib import DATA_DIR, DEFAULT_OPENAI_MODEL, load_json, \
+    newsletter_openai_api_key
+from registry_ingest import (
+    DEFAULT_REASONING_EFFORT,
+    confirm_match,
+    extract_predictions,
+    ingest_payload,
+    make_embed_fn,
+    print_review,
+)
+
+DEFAULT_RUNS_DIR = DATA_DIR / 'runs'
+
+
+def seed(conn, runs_dir, *, embed_fn, confirm_fn, predict_fn, keep_recent=2):
+    run_dirs = sorted(d for d in runs_dir.iterdir()
+                      if d.is_dir() and (d / 'synthesis').is_dir())
+    review = []
+    for run_dir in run_dirs:
+        for path in sorted((run_dir / 'synthesis')
+                           .glob('deep_synthesis.*.json')):
+            if path.name.endswith('.meta.json') or \
+                    path.name.endswith('.validation.json'):
+                continue
+            payload = load_json(path)
+            review.extend(ingest_payload(
+                conn, payload, run_slug=run_dir.name, embed_fn=embed_fn,
+                confirm_fn=confirm_fn, predict_fn=predict_fn,
+                lane=path.stem.split('.')[-1]))
+    recent = {d.name for d in run_dirs[-keep_recent:]}
+    for row in intel_db.active_findings(conn):
+        if row['last_updated_run'] not in recent:
+            intel_db.apply_event(
+                conn, finding_id=row['finding_id'], run_slug='seed',
+                new_status='stale', delta_text='aged out at seed time')
+    return review
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--runs-dir', default=str(DEFAULT_RUNS_DIR))
+    parser.add_argument('--db', default=str(intel_db.DEFAULT_DB_PATH))
+    parser.add_argument('--model', default=DEFAULT_OPENAI_MODEL)
+    parser.add_argument('--reasoning-effort',
+                        choices=['low', 'medium', 'high'],
+                        default=DEFAULT_REASONING_EFFORT)
+    parser.add_argument('--keep-recent', type=int, default=2,
+                        help='runs whose findings stay active (default 2)')
+    args = parser.parse_args()
+
+    import openai
+    client = openai.OpenAI(api_key=newsletter_openai_api_key())
+    conn = intel_db.connect(args.db)
+
+    def confirm_fn(new, row):
+        return confirm_match(client, args.model, args.reasoning_effort,
+                             new, row)
+
+    def predict_fn(finding):
+        return extract_predictions(client, args.model,
+                                   args.reasoning_effort, finding)
+
+    review = seed(conn, Path(args.runs_dir), embed_fn=make_embed_fn(client),
+                  confirm_fn=confirm_fn, predict_fn=predict_fn,
+                  keep_recent=args.keep_recent)
+    print_review(review)
+    total = conn.execute('SELECT COUNT(*) FROM findings').fetchone()[0]
+    active = len(intel_db.active_findings(conn))
+    print(f'\nseeded: {total} findings ({active} active)')
+
+
+if __name__ == '__main__':
+    main()</script></pre>
+          </div>
+          <p class="expect ok">Old findings stale out; recent two windows stay open; <code>.meta.json</code> files are skipped.</p>
+          <div class="commit-bar"><span class="label">commit</span><code>feat: seed registry from promoted runs with stale-out</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 9 -->
+      <details class="task" id="t9">
+        <summary><span class="chev">&#9656;</span><span class="tnum">9</span><span class="ttitle">Runbook documentation + full verification</span>
+          <span class="files"><span class="tag doc">SYNTHESIS_RUNBOOK.md</span></span></summary>
+        <div class="body">
+          <div class="step"><div class="step-head"><span class="box"></span>Step 1 · Add the registry step (between synthesis review and <code>save_run</code>)</div>
+            <pre class="code"><script type="text/plain" class="src">### Registry ingest (after synthesis review, before save_run)
+
+python3 scripts/registry_ingest.py --tmp-run <slug>
+
+- Matches this run's findings against the standing registry in
+  `data/intel.db`, records status events, captures predictions, and
+  prints a review table. Read the table — transitions auto-apply.
+- Exit 1 means a finding repeats an open registry finding without a
+  `finding_updates` reference (the no-weekly-reruns gate): fix the
+  synthesis output or rerun synthesis before promoting.
+- `data/intel.db` is committed with the run; undo a bad ingest with
+  `git checkout -- data/intel.db`.
+- First-time setup only: `python3 scripts/seed_registry.py` bootstraps
+  the registry from `data/runs/`.</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 2 · Run the complete suite</div>
+            <p class="expect ok"><span class="run">python3 -m unittest discover tests -v 2&gt;&amp;1 | tail -5</span> &mdash; OK, zero failures</p>
+          </div>
+          <div class="commit-bar"><span class="label">commit</span><code>docs: registry ingest step in synthesis runbook</code></div>
+        </div>
+      </details>
+      </div><!-- /timeline -->
+
+      <h2 id="post">Post-implementation (manual, with the user)</h2>
+      <p>Not part of the coding tasks — flag these to the user when the plan is done:</p>
+      <ol>
+        <li>Run <code>python3 scripts/seed_registry.py</code> once against the real <code>data/runs/</code> (costs ~a few hundred cheap API calls), review the printed table, and commit <code>data/intel.db</code>.</li>
+        <li>On the next real synthesis run, confirm: standing context appears in the <code>.prompt.md</code> artifact, <code>finding_updates</code> validate, and <code>registry_ingest.py</code> produces a sane review table.</li>
+        <li>The golden-window fixture still lives only in the grok worktree (gitignored) — copy it somewhere durable before relying on it for regression checks.</li>
+      </ol>
+
+      <div class="foot-nav">
+        Related artifacts: <a href="target-architecture.html">Sequencing spec &rarr;</a> · <a href="synthesis-output-validator.html">Validator plan &rarr;</a> · <a href="index.html">Index</a>
+      </div>
+    </div><!-- /wrap -->
+  </main>
+
+  <div id="toast">Copied</div>
+  <script>
+// Shared behavior for the superpowers plan artifacts.
+(function () {
+  'use strict';
+
+  // Render raw code held in <script type="text/plain" class="src"> into its
+  // parent <pre>, so Python `<`/`>`/`&` survive the HTML parser untouched.
+  document.querySelectorAll('pre.code').forEach(function (pre) {
+    var src = pre.querySelector('script.src');
+    if (!src) return;
+    var text = src.textContent.replace(/^\n/, '').replace(/\s+$/, '');
+    pre.textContent = text; // textContent assignment escapes automatically
+    var wrap = document.createElement('div');
+    wrap.className = 'codewrap';
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.appendChild(pre);
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', function () { copy(text); });
+    wrap.appendChild(btn);
+  });
+
+  var toast = document.getElementById('toast');
+  function copy(text) {
+    navigator.clipboard.writeText(text).then(function () {
+      if (!toast) return;
+      toast.classList.add('show');
+      setTimeout(function () { toast.classList.remove('show'); }, 1200);
+    });
+  }
+
+  // Expand / collapse all task <details>.
+  var tasks = document.querySelectorAll('details.task');
+  var expand = document.getElementById('expand-all');
+  var collapse = document.getElementById('collapse-all');
+  if (expand) expand.addEventListener('click', function () {
+    tasks.forEach(function (d) { d.open = true; });
+  });
+  if (collapse) collapse.addEventListener('click', function () {
+    tasks.forEach(function (d) { d.open = false; });
+  });
+
+  // Scroll-spy: highlight the nav link for the section in view.
+  var links = Array.prototype.slice.call(
+    document.querySelectorAll('a.nav-link[href^="#"]'));
+  var targets = links.map(function (a) {
+    return document.getElementById(a.getAttribute('href').slice(1));
+  }).filter(Boolean);
+  if ('IntersectionObserver' in window && targets.length) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var id = e.target.id;
+        links.forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+        });
+      });
+    }, { rootMargin: '0px 0px -75% 0px' });
+    targets.forEach(function (t) { spy.observe(t); });
+  }
+
+  // Open a task and scroll when its sidebar link is clicked.
+  links.forEach(function (a) {
+    a.addEventListener('click', function () {
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if (el && el.tagName === 'DETAILS') el.open = true;
+    });
+  });
+})();
+  </script>
+</body>
+</html>

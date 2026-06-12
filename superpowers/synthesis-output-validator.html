@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mechanical Synthesis Output Validator · Implementation Plan</title>
+  <style>
+/* Superpowers spec/plan artifacts — timeline / pipeline-flow design.
+   Light slate page, dark code slabs, milestone-accented timeline spine. */
+:root {
+  --bg: #f3f4f7;
+  --surface: #ffffff;
+  --surface-2: #f7f8fa;
+  --ink: #191c22;
+  --soft: #474e5c;
+  --muted: #868d9c;
+  --line: #e3e6ec;
+  --line-2: #eef0f4;
+  --spine: #cdd2dc;
+  --accent: #3b5bdb;
+  --accent-soft: #eaeefc;
+  --m1: #11935f;
+  --m2: #c98a12;
+  --m3: #7b54e0;
+  --m4: #d4498a;
+  --m5: #d9663a;
+  --ok: #11935f;
+  --warn: #b07d10;
+  --err: #d23b3b;
+  --code-bg: #0d1117;
+  --code-fg: #c9d1d9;
+  --radius: 12px;
+  --font: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, .mono { font-family: var(--mono); font-size: 0.86em; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 0 28px; }
+
+/* ---- top bar ---- */
+header.topbar {
+  position: sticky; top: 0; z-index: 30; background: rgba(243,244,247,0.85);
+  backdrop-filter: saturate(180%) blur(12px); border-bottom: 1px solid var(--line);
+}
+header.topbar .wrap { display: flex; align-items: center; gap: 18px; height: 54px; }
+header.topbar a.home { font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+header.topbar a.home:hover { text-decoration: none; color: var(--accent); }
+header.topbar .crumbs { display: flex; gap: 6px; font-size: 13px; color: var(--muted); }
+header.topbar .crumbs a { color: var(--muted); }
+header.topbar .crumbs a.here { color: var(--ink); font-weight: 600; }
+header.topbar .crumbs .sep { color: var(--spine); }
+header.topbar .spacer { margin-left: auto; }
+header.topbar .ghbtn {
+  font-size: 12px; color: var(--soft); border: 1px solid var(--line);
+  border-radius: 7px; padding: 5px 11px; background: var(--surface);
+}
+
+/* ---- pipeline rail ---- */
+.pipeline {
+  background: var(--surface); border-bottom: 1px solid var(--line);
+  position: sticky; top: 54px; z-index: 20;
+}
+.pipeline .wrap { display: flex; align-items: center; gap: 0; height: 60px; overflow-x: auto; }
+.pipeline .stage {
+  display: flex; align-items: center; gap: 9px; white-space: nowrap; color: var(--muted);
+  font-size: 12.5px; font-weight: 500;
+}
+.pipeline .stage .dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--spine); flex-shrink: 0;
+}
+.pipeline .stage.active { color: var(--ink); font-weight: 700; }
+.pipeline .stage.active .dot { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.pipeline .stage.feeds { color: var(--soft); }
+.pipeline .stage.feeds .dot { background: var(--accent); opacity: 0.45; }
+.pipeline .link {
+  flex: 1; min-width: 22px; height: 2px; background: var(--spine);
+  margin: 0 12px; border-radius: 2px;
+}
+.pipeline .link.lit { background: linear-gradient(90deg, var(--spine), var(--accent)); }
+
+/* ---- document head ---- */
+main.doc { padding: 0 0 120px; }
+.doc-head { padding: 44px 0 8px; }
+.doc-head .badge { margin-bottom: 16px; }
+.doc-head h1 {
+  font-family: var(--font); font-size: 2.5rem; line-height: 1.12; margin: 0 0 14px;
+  letter-spacing: -0.015em; font-weight: 600;
+}
+.doc-head .lead { font-size: 1.2rem; color: var(--soft); max-width: 42em; margin: 0; line-height: 1.5; }
+.doc-head .facts { display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 22px; }
+.doc-head .facts .chip {
+  font-size: 12px; color: var(--soft); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 20px; padding: 5px 13px;
+}
+.doc-head .facts .chip b { color: var(--ink); font-weight: 600; }
+
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px;
+  border-radius: 5px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.badge-plan { background: var(--accent-soft); color: var(--accent); }
+.badge-approved { background: rgba(17,147,95,0.12); color: var(--m1); }
+
+h2 { font-family: var(--font); font-size: 1.55rem; font-weight: 600; margin: 46px 0 14px; letter-spacing: -0.01em; }
+h3 { font-size: 1.1rem; margin: 24px 0 10px; }
+p { max-width: 44em; }
+ul, ol { max-width: 44em; }
+li { margin: 5px 0; }
+
+.callout {
+  background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+  border-radius: 10px; padding: 16px 20px; margin: 20px 0; font-size: 0.96em; color: var(--soft);
+  max-width: none;
+}
+.callout.warn { border-left-color: var(--warn); }
+.callout strong { color: var(--ink); }
+
+.kv { display: grid; gap: 2px; margin: 20px 0; }
+.kv .row { display: grid; grid-template-columns: 140px 1fr; gap: 18px; padding: 14px 0; border-top: 1px solid var(--line-2); }
+.kv .row:last-child { border-bottom: 1px solid var(--line-2); }
+.kv .k { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; padding-top: 2px; }
+.kv .v { color: var(--soft); max-width: none; }
+
+table.grid { width: 100%; border-collapse: collapse; font-size: 14px; margin: 20px 0; }
+table.grid th, table.grid td { border-bottom: 1px solid var(--line); padding: 12px 14px; text-align: left; vertical-align: top; }
+table.grid th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+table.grid td:first-child { color: var(--soft); white-space: nowrap; }
+table.grid td .mono { color: var(--ink); }
+.tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+.tag.create { background: rgba(17,147,95,0.13); color: var(--m1); }
+.tag.modify { background: rgba(201,138,18,0.14); color: var(--m2); }
+.tag.test   { background: rgba(123,84,224,0.13); color: var(--m3); }
+.tag.doc    { background: var(--accent-soft); color: var(--accent); }
+
+/* ---- timeline ---- */
+.timeline { position: relative; margin: 16px 0 0; padding-left: 38px; }
+.timeline::before {
+  content: ""; position: absolute; left: 11px; top: 6px; bottom: 6px; width: 2px;
+  background: linear-gradient(180deg, var(--accent), var(--spine) 85%);
+  border-radius: 2px;
+}
+.timeline .tl-label {
+  position: relative; margin: 26px 0 10px -38px; padding-left: 38px;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 700;
+}
+
+.task {
+  position: relative; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); margin: 14px 0; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(20,24,34,0.03);
+}
+.task::before { /* node on the spine */
+  content: ""; position: absolute; left: -33px; top: 22px; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--surface); border: 3px solid var(--accent);
+  box-shadow: 0 0 0 4px var(--bg); z-index: 2;
+}
+.task[open]::before { background: var(--accent); }
+.task > summary {
+  cursor: pointer; list-style: none; padding: 18px 22px; display: flex; align-items: center; gap: 14px;
+}
+.task > summary::-webkit-details-marker { display: none; }
+.task > summary .tnum {
+  font-family: var(--mono); font-size: 12px; color: #fff; background: var(--accent);
+  padding: 3px 10px; border-radius: 20px; font-weight: 600; flex-shrink: 0;
+}
+.task > summary .ttitle { font-size: 1.05rem; color: var(--ink); font-weight: 600; }
+.task > summary .files { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.task > summary .chev { color: var(--muted); transition: transform 0.15s; }
+.task[open] > summary .chev { transform: rotate(90deg); }
+.task .body { padding: 2px 22px 22px; border-top: 1px solid var(--line-2); }
+.task .files-line { font-size: 13px; color: var(--soft); margin: 14px 0 4px; }
+
+.step { margin: 18px 0; }
+.step .step-head { font-size: 13px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.step .step-head .box { width: 15px; height: 15px; border: 1.5px solid var(--spine); border-radius: 4px; flex-shrink: 0; }
+.step .desc { color: var(--soft); font-size: 0.96em; }
+
+pre.code {
+  background: var(--code-bg); border: 1px solid #1d2430; border-radius: 9px;
+  padding: 16px 18px; overflow-x: auto; margin: 12px 0; color: var(--code-fg);
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.55; white-space: pre; tab-size: 4;
+}
+pre.code.sh { color: #9fe7bf; }
+.expect { font-size: 13px; color: var(--muted); margin: 8px 0 12px; }
+.expect .run { color: var(--soft); font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; }
+.expect.ok { color: var(--ok); }
+
+.script-pill { display: inline-block; font-family: var(--mono); font-size: 12px; background: var(--surface-2); border: 1px solid var(--line); padding: 1px 7px; border-radius: 5px; margin: 1px 3px 1px 0; color: var(--soft); }
+.commit-bar {
+  display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 10px 14px;
+  background: var(--surface-2); border: 1px dashed var(--line); border-radius: 8px;
+  font-size: 12px; color: var(--muted);
+}
+.commit-bar .label { text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; font-weight: 700; }
+.commit-bar code { color: var(--soft); }
+
+.out-scope { color: var(--soft); font-size: 15px; padding: 12px 18px; border-left: 3px solid var(--line); margin: 10px 0; background: var(--surface); border-radius: 0 8px 8px 0; }
+.foot-nav { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; }
+
+/* ---- dot-nav (right rail) ---- */
+nav.dotnav {
+  position: fixed; right: max(22px, calc((100vw - 860px)/2 - 60px)); top: 50%;
+  transform: translateY(-50%); z-index: 15; display: flex; flex-direction: column; gap: 3px;
+}
+nav.dotnav a {
+  display: flex; align-items: center; gap: 9px; justify-content: flex-end;
+  font-size: 11px; color: var(--muted); padding: 3px 0;
+}
+nav.dotnav a .lbl { opacity: 0; transform: translateX(6px); transition: all 0.15s; white-space: nowrap; }
+nav.dotnav a .pip { width: 8px; height: 8px; border-radius: 50%; background: var(--spine); flex-shrink: 0; transition: all 0.15s; }
+nav.dotnav a:hover { text-decoration: none; }
+nav.dotnav a:hover .lbl { opacity: 1; transform: none; }
+nav.dotnav a.active .pip { background: var(--accent); transform: scale(1.35); }
+nav.dotnav a.active .lbl { opacity: 1; transform: none; color: var(--ink); font-weight: 600; }
+@media (max-width: 1180px) { nav.dotnav { display: none; } }
+
+.toolbar { display: flex; gap: 18px; align-items: center; margin: 6px 0 0; font-size: 13px; }
+.toolbar button.link { background: none; border: none; color: var(--accent); cursor: pointer; font-size: 13px; padding: 0; }
+.toolbar button.link:hover { text-decoration: underline; }
+.toolbar .src { color: var(--muted); }
+
+.codewrap { position: relative; }
+.codewrap .copy-btn { position: absolute; top: 8px; right: 8px; opacity: 0; transition: opacity 0.15s; }
+.codewrap:hover .copy-btn { opacity: 1; }
+.copy-btn { font-size: 11px; padding: 4px 10px; border-radius: 6px; border: 1px solid #2a3340; background: #161c26; color: #9aa4b2; cursor: pointer; }
+.copy-btn:hover { color: #fff; border-color: var(--accent); }
+
+#toast {
+  position: fixed; bottom: 24px; right: 24px; background: var(--ink); color: #fff;
+  font-size: 13px; padding: 10px 16px; border-radius: 8px; opacity: 0;
+  transition: opacity 0.2s; pointer-events: none; z-index: 50;
+}
+#toast.show { opacity: 1; }
+
+@media (max-width: 640px) {
+  .doc-head h1 { font-size: 1.9rem; }
+  .kv .row { grid-template-columns: 1fr; gap: 4px; }
+  .timeline { padding-left: 26px; }
+  .task::before { left: -21px; }
+}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="home" href="index.html">Superpowers</a>
+      <nav class="crumbs">
+        <a href="target-architecture.html">spec</a><span class="sep">/</span>
+        <a href="m1-findings-registry.html">M1 registry</a><span class="sep">/</span>
+        <a class="here">validator</a>
+      </nav>
+      <span class="spacer"></span>
+      <span class="ghbtn">6 tasks · stdlib</span>
+    </div>
+  </header>
+
+  <div class="pipeline" aria-label="Where this plan sits in the refresh pipeline">
+    <div class="wrap">
+      <span class="stage"><span class="dot"></span>Fetch</span><span class="link"></span>
+      <span class="stage"><span class="dot"></span>Extract</span><span class="link"></span>
+      <span class="stage feeds" title="validator gates synthesis output"><span class="dot"></span>Synthesize</span><span class="link lit"></span>
+      <span class="stage active"><span class="dot"></span>Validate</span><span class="link"></span>
+      <span class="stage"><span class="dot"></span>Registry&nbsp;ingest</span><span class="link"></span>
+      <span class="stage"><span class="dot"></span>Save&nbsp;run</span>
+    </div>
+  </div>
+
+  <nav class="dotnav" aria-label="Task navigation">
+    <a class="nav-link" href="#t1"><span class="lbl">Validator core</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t2"><span class="lbl">Retry formatting</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t3"><span class="lbl">Retry loop</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t4"><span class="lbl">Wire deep synthesis</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t5"><span class="lbl">Wire feedback</span><span class="pip"></span></a>
+    <a class="nav-link" href="#t6"><span class="lbl">Documentation</span><span class="pip"></span></a>
+  </nav>
+
+  <main class="doc">
+    <div class="wrap">
+      <div class="doc-head">
+        <span class="badge badge-plan">Implementation plan</span>
+        <h1>Mechanical Synthesis<br>Output Validator</h1>
+        <p class="lead">Move the grounding hard invariants — exact <code>article_id</code> membership, structured references, evidence counts, no prose IDs — from prompt text into a mechanical validator with one corrective retry turn, wired into both synthesis runners.</p>
+        <div class="facts">
+          <span class="chip">branch <b>fable</b></span>
+          <span class="chip"><b>6</b> tasks · TDD</span>
+          <span class="chip">stdlib only</span>
+          <span class="chip">gate M1 extends</span>
+          <span class="chip">2026-06-10</span>
+        </div>
+        <div class="toolbar">
+          <button class="link" id="expand-all">Expand all</button>
+          <button class="link" id="collapse-all">Collapse all</button>
+          <span class="src">Source: <code>plans/2026-06-10-synthesis-output-validator.md</code></span>
+        </div>
+      </div>
+
+      <h2 id="overview">Overview</h2>
+
+      <div class="kv">
+        <div class="row"><div class="k">Architecture</div><div class="v">A new pure module <span class="script-pill">scripts/synthesis_validator.py</span> walks any synthesis JSON generically (the two models emit different envelopes), returns a violation list, and provides <code>run_with_validation()</code> — a wrapper that calls a provider closure, parses, validates, and on error-level violations sends ONE corrective retry turn (original prompt + prior output + violations). The validator never mutates model output. Both <span class="script-pill">run_deep_synthesis.py</span> and <span class="script-pill">run_feedback_synthesis.py</span> wrap their existing dispatch in a closure and route it through the wrapper; results land in a <code>.validation.json</code> sidecar and the <code>.meta.json</code>.</div></div>
+        <div class="row"><div class="k">Tech stack</div><div class="v">Python 3 stdlib only. Tests use <code>unittest</code> with the repo's <code>load_module</code> convention.</div></div>
+        <div class="row"><div class="k">Relationship</div><div class="v">This validator is the gate the <a href="m1-findings-registry.html">M1 registry</a> extends (it adds <code>finding_id</code> membership in Task 6 of that plan). Ship this first.</div></div>
+      </div>
+
+      <div class="callout">
+        <strong>The HANDOVER.md &ldquo;Hard invariants&rdquo; section is the spec.</strong> Every article reference must be a structured object with an exact <code>article_id</code> from the corpus; &le;3 evidence refs per finding (4 allowed only when genuinely needed — mechanically: error above 4, warning at exactly 4); valid JSON envelope. Validation must be <strong>at least as strict</strong> after any refactor.
+      </div>
+
+      <h2 id="context">Context for the implementer</h2>
+      <ul>
+        <li>Repo: <code>/Users/briannewman/Projects/newsletter-intel-fable</code>, branch <code>fable</code>. Run all commands from the repo root.</li>
+        <li>Real output shapes (verified 2026-06-10): Opus emits <code>{overall, findings[{title, explanation, evidence[{article_id, title, role}]}], corpus_questions[...]}</code>; GPT-5.5 emits <code>{corpus_window, article_links, whole_corpus_patterns, corpus_questions}</code>. <strong>Never assume top-level key names</strong> — walk the whole tree.</li>
+        <li>ID-bearing keys are exactly <code>article_id</code>, <code>article_id_a</code>, <code>article_id_b</code> (<code>scripts/synthesis_evidence.py:21</code>). Article IDs look like <code>article-&lt;20 hex chars&gt;</code> (<code>scripts/lib.py:593-606</code>).</li>
+        <li><code>extract_json_object</code> (<code>scripts/lib.py:616-624</code>) is the existing parse step; it raises <code>RuntimeError</code> when no JSON object is found.</li>
+        <li>Do NOT modify <code>lib.py</code> provider runners, the prompts (<code>DEEP_SYNTHESIS_PROMPT.md</code>, <code>FEEDBACK_SYNTHESIS_PROMPT.md</code>), or the system prompts. The prompt-side grounding rules stay; this adds the code-side guarantee.</li>
+      </ul>
+
+      <h2 id="files">File structure</h2>
+      <table class="grid">
+        <thead><tr><th>File</th><th>Responsibility</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">scripts/synthesis_validator.py</span> <span class="tag create">create</span></td><td>Pure validation + retry orchestration, no I/O except via the injected <code>call_model</code> closure.</td></tr>
+          <tr><td><span class="mono">tests/test_synthesis_validator.py</span> <span class="tag test">create</span></td><td>Unit tests, no network.</td></tr>
+          <tr><td><span class="mono">scripts/run_deep_synthesis.py</span> <span class="tag modify">modify</span></td><td>Wrap provider dispatch, write sidecar, extend meta, add <code>--validate-retries</code>.</td></tr>
+          <tr><td><span class="mono">scripts/run_feedback_synthesis.py</span> <span class="tag modify">modify</span></td><td>Same pattern.</td></tr>
+          <tr><td><span class="mono">PIPELINE.md</span> <span class="tag doc">doc</span></td><td>Document the new sidecar and behavior.</td></tr>
+          <tr><td><span class="mono">DECISIONS.md</span> <span class="tag doc">doc</span></td><td>One durable decision entry.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="timeline">
+        <div class="tl-label">Tasks · TDD · stdlib only</div>
+      <!-- TASK 1 -->
+      <details class="task" id="t1" open>
+        <summary><span class="chev">&#9656;</span><span class="tnum">1</span><span class="ttitle">Validator core — walk, ID membership, refs, prose IDs, counts</span>
+          <span class="files"><span class="tag create">synthesis_validator.py</span><span class="tag test">test_synthesis_validator.py</span></span></summary>
+        <div class="body">
+          <div class="step"><div class="step-head"><span class="box"></span>Step 1 · Failing tests</div>
+            <pre class="code"><script type="text/plain" class="src">import importlib.util
+import sys
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / 'scripts'
+sys.path.insert(0, str(SCRIPTS))
+
+
+def load_module(name, filename):
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / filename)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+sv = load_module('synthesis_validator_test', 'synthesis_validator.py')
+
+VALID_IDS = {
+    'article-aaaaaaaaaaaaaaaaaaaa',
+    'article-bbbbbbbbbbbbbbbbbbbb',
+    'article-cccccccccccccccccccc',
+    'article-dddddddddddddddddddd',
+    'article-eeeeeeeeeeeeeeeeeeee',
+}
+
+
+def finding(evidence):
+    return {'title': 'T', 'explanation': 'Plain mechanism text.', 'evidence': evidence}
+
+
+def ev(aid):
+    return {'article_id': aid, 'title': 'X', 'role': 'supports'}
+
+
+class ValidateCleanPayloadTest(unittest.TestCase):
+    def test_clean_opus_shaped_payload_passes(self):
+        payload = {
+            'overall': 'No IDs in prose here.',
+            'findings': [finding([ev('article-aaaaaaaaaaaaaaaaaaaa'),
+                                  ev('article-bbbbbbbbbbbbbbbbbbbb')])],
+            'corpus_questions': [{
+                'question': 'Q', 'answer': 'A', 'why_not_one_article': 'W',
+                'evidence': [ev('article-cccccccccccccccccccc')],
+            }],
+        }
+        self.assertEqual(sv.validate_synthesis_payload(payload, VALID_IDS), [])
+
+    def test_clean_gpt_shaped_payload_passes(self):
+        payload = {
+            'corpus_window': {'days': 7},
+            'article_links': [{'connection': 'C',
+                               'article_id_a': 'article-aaaaaaaaaaaaaaaaaaaa',
+                               'article_id_b': 'article-bbbbbbbbbbbbbbbbbbbb'}],
+        }
+        self.assertEqual(sv.validate_synthesis_payload(payload, VALID_IDS), [])
+
+
+class UnknownIdTest(unittest.TestCase):
+    def test_unknown_article_id_is_error_with_path(self):
+        payload = {'findings': [finding([ev('article-ffffffffffffffffffff')])]}
+        violations = sv.validate_synthesis_payload(payload, VALID_IDS)
+        self.assertEqual(len(violations), 1)
+        v = violations[0]
+        self.assertEqual(v['code'], 'unknown_article_id')
+        self.assertEqual(v['severity'], 'error')
+        self.assertEqual(v['path'], '$.findings[0].evidence[0].article_id')
+        self.assertIn('article-ffffffffffffffffffff', v['message'])
+
+    def test_unknown_id_in_pair_keys(self):
+        payload = {'links': [{'article_id_a': 'article-aaaaaaaaaaaaaaaaaaaa',
+                              'article_id_b': 'article-000000000000000000ff'}]}
+        violations = sv.validate_synthesis_payload(payload, VALID_IDS)
+        self.assertEqual([v['code'] for v in violations], ['unknown_article_id'])
+        self.assertEqual(violations[0]['path'], '$.links[0].article_id_b')
+
+    def test_non_string_article_id_is_malformed(self):
+        payload = {'findings': [finding([{'article_id': 42, 'role': 'x'}])]}
+        violations = sv.validate_synthesis_payload(payload, VALID_IDS)
+        self.assertEqual([v['code'] for v in violations], ['malformed_article_ref'])
+        self.assertEqual(violations[0]['severity'], 'error')
+
+
+class ProseIdTest(unittest.TestCase):
+    def test_article_token_in_free_text_is_error(self):
+        payload = {'overall': 'See article-aaaaaaaaaaaaaaaaaaaa for details.'}
+        violations = sv.validate_synthesis_payload(payload, VALID_IDS)
+        self.assertEqual([v['code'] for v in violations], ['prose_article_id'])
+        self.assertEqual(violations[0]['path'], '$.overall')
+
+    def test_truncated_ellipsized_id_in_text_is_error(self):
+        payload = {'findings': [{'title': 'T',
+                                 'explanation': 'Backed by article-aaaa... mostly.',
+                                 'evidence': [ev('article-aaaaaaaaaaaaaaaaaaaa')]}]}
+        violations = sv.validate_synthesis_payload(payload, VALID_IDS)
+        self.assertEqual([v['code'] for v in violations], ['prose_article_id'])
+
+    def test_id_value_fields_do_not_trigger_prose_check(self):
+        payload = {'findings': [finding([ev('article-aaaaaaaaaaaaaaaaaaaa')])]}
+        self.assertEqual(sv.validate_synthesis_payload(payload, VALID_IDS), [])
+
+
+class StructuredRefTest(unittest.TestCase):
+    def test_bare_string_id_in_evidence_list_is_error(self):
+        payload = {'findings': [finding(['article-aaaaaaaaaaaaaaaaaaaa'])]}
+        violations = sv.validate_synthesis_payload(payload, VALID_IDS)
+        self.assertEqual([v['code'] for v in violations], ['bare_string_article_ref'])
+        self.assertEqual(violations[0]['severity'], 'error')
+        self.assertEqual(violations[0]['path'], '$.findings[0].evidence[0]')
+
+
+class EvidenceCountTest(unittest.TestCase):
+    def _payload(self, n):
+        ids = sorted(VALID_IDS)
+        return {'findings': [finding([ev(i) for i in ids[:n]])]}
+
+    def test_three_refs_clean(self):
+        self.assertEqual(sv.validate_synthesis_payload(self._payload(3), VALID_IDS), [])
+
+    def test_four_refs_warning_only(self):
+        violations = sv.validate_synthesis_payload(self._payload(4), VALID_IDS)
+        self.assertEqual([v['code'] for v in violations], ['evidence_at_max'])
+        self.assertEqual(violations[0]['severity'], 'warning')
+        self.assertFalse(sv.has_errors(violations))
+
+    def test_five_refs_error(self):
+        violations = sv.validate_synthesis_payload(self._payload(5), VALID_IDS)
+        self.assertEqual([v['code'] for v in violations], ['evidence_too_long'])
+        self.assertEqual(violations[0]['severity'], 'error')
+        self.assertEqual(violations[0]['path'], '$.findings[0].evidence')
+        self.assertTrue(sv.has_errors(violations))
+
+
+if __name__ == '__main__':
+    unittest.main()</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · <code>scripts/synthesis_validator.py</code></div>
+            <pre class="code"><script type="text/plain" class="src">"""Mechanical validation of synthesis/feedback output JSON.
+
+Moves the grounding hard invariants (HANDOVER.md) from prompt text into
+code: every article reference is a structured object with an exact
+``article_id`` from the corpus, evidence lists stay within the discipline
+cap, and no article-ID-like strings appear in prose. The validator never
+mutates the payload; it reports violations, and ``run_with_validation``
+drives a bounded corrective retry against the same model.
+"""
+
+from __future__ import annotations
+
+import re
+
+from lib import extract_json_object
+
+ARTICLE_ID_KEYS = ('article_id', 'article_id_a', 'article_id_b')
+MAX_EVIDENCE_REFS = 4
+PREFERRED_EVIDENCE_REFS = 3
+
+# Catches exact, truncated, or ellipsized article-ID-like tokens in prose.
+PROSE_ARTICLE_ID_RE = re.compile(r'article-[0-9a-f]{4,}[0-9a-f]*(?:\.\.\.|...)?',
+                                 re.IGNORECASE)
+
+
+def _violation(code, path, message, severity='error'):
+    return {'code': code, 'path': path, 'message': message, 'severity': severity}
+
+
+def _is_article_ref(item):
+    if isinstance(item, str) and item.startswith('article-'):
+        return True
+    return isinstance(item, dict) and isinstance(item.get('article_id'), str)
+
+
+def _is_article_ref_list(items):
+    return bool(items) and all(_is_article_ref(item) for item in items)
+
+
+def validate_synthesis_payload(payload, valid_ids):
+    """Return a list of violation dicts for *payload* against *valid_ids*."""
+    violations = []
+
+    def check_id_value(value, path):
+        if not isinstance(value, str) or not value.strip():
+            violations.append(_violation(
+                'malformed_article_ref', path,
+                f'article reference must be a non-empty string, got {value!r}'))
+        elif value not in valid_ids:
+            violations.append(_violation(
+                'unknown_article_id', path,
+                f'{value!r} is not an article_id in the corpus'))
+
+    def check_prose(value, path):
+        if PROSE_ARTICLE_ID_RE.search(value):
+            violations.append(_violation(
+                'prose_article_id', path,
+                'article-ID-like token in free text; cite via structured '
+                'evidence objects only'))
+
+    def check_ref_list(items, path):
+        if len(items) > MAX_EVIDENCE_REFS:
+            violations.append(_violation(
+                'evidence_too_long', path,
+                f'{len(items)} article references; the cap is '
+                f'{PREFERRED_EVIDENCE_REFS} ({MAX_EVIDENCE_REFS} only when a '
+                'claim genuinely depends on that many distinct articles)'))
+        elif len(items) == MAX_EVIDENCE_REFS:
+            violations.append(_violation(
+                'evidence_at_max', path,
+                f'{MAX_EVIDENCE_REFS} article references; keep to '
+                f'{PREFERRED_EVIDENCE_REFS} unless all are genuinely required',
+                severity='warning'))
+        for idx, item in enumerate(items):
+            if isinstance(item, str):
+                violations.append(_violation(
+                    'bare_string_article_ref', f'{path}[{idx}]',
+                    'article reference must be a structured object with an '
+                    'article_id field, not a bare string'))
+
+    def walk(node, path):
+        if isinstance(node, dict):
+            for key, value in node.items():
+                child = f'{path}.{key}'
+                if key in ARTICLE_ID_KEYS:
+                    check_id_value(value, child)
+                elif isinstance(value, str):
+                    check_prose(value, child)
+                elif isinstance(value, list) and _is_article_ref_list(value):
+                    check_ref_list(value, child)
+                    walk(value, child)
+                else:
+                    walk(value, child)
+        elif isinstance(node, list):
+            for idx, item in enumerate(node):
+                child = f'{path}[{idx}]'
+                if isinstance(item, str):
+                    # Bare strings inside ref lists are reported by
+                    # check_ref_list; prose strings elsewhere still get the
+                    # prose check unless they are themselves bare refs.
+                    if not item.startswith('article-'):
+                        check_prose(item, child)
+                else:
+                    walk(item, child)
+
+    walk(payload, '$')
+    return violations
+
+
+def has_errors(violations):
+    return any(v['severity'] == 'error' for v in violations)
+
+
+def validation_summary(violations, *, retries_used=0):
+    counts = {}
+    for v in violations:
+        counts[v['code']] = counts.get(v['code'], 0) + 1
+    if has_errors(violations):
+        status = 'failed'
+    elif violations:
+        status = 'passed_with_warnings'
+    else:
+        status = 'passed'
+    return {'status': status, 'counts_by_code': counts,
+            'retries_used': retries_used}</script></pre>
+            <p class="expect">The prose regex in the real source uses an actual ellipsis character alongside <code>...</code>; rendered here as ASCII for legibility.</p>
+          </div>
+          <p class="expect ok">All Task-1 tests PASS.</p>
+          <div class="commit-bar"><span class="label">commit</span><code>feat: mechanical synthesis output validator (ID membership, structured refs, evidence caps)</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 2 -->
+      <details class="task" id="t2">
+        <summary><span class="chev">&#9656;</span><span class="tnum">2</span><span class="ttitle">Retry feedback formatting</span>
+          <span class="files"><span class="tag modify">synthesis_validator.py</span><span class="tag test">test_synthesis_validator.py</span></span></summary>
+        <div class="body">
+          <p class="files-line">Builds the corrective-turn section appended to the original prompt: prior raw output, a capped violation list, and explicit fix instructions. Warnings are shown but only errors demand correction.</p>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Implementation (append)</div>
+            <pre class="code"><script type="text/plain" class="src">def format_violations_for_retry(violations, *, prior_raw, max_items=40):
+    """Build the corrective-turn prompt section appended to the original prompt."""
+    lines = [
+        '',
+        '## Validation violations — corrective retry',
+        '',
+        'Your previous response violated mechanical grounding rules and was',
+        'rejected by an automated validator. Your previous response was:',
+        '',
+        '```json',
+        prior_raw,
+        '```',
+        '',
+        'Violations:',
+        '',
+    ]
+    for v in violations[:max_items]:
+        lines.append(f"- [{v['severity']}] {v['code']} at {v['path']}: {v['message']}")
+    remaining = len(violations) - max_items
+    if remaining > 0:
+        lines.append(f'- ... {remaining} more violations not listed; fix the pattern everywhere.')
+    lines.extend([
+        '',
+        'Return the complete corrected JSON object again. Fix every [error]',
+        'violation and change nothing else about your analysis. Use only exact',
+        'article_id values copied from the corpus dataset above. If you cannot',
+        'identify the correct article_id for an evidence item, remove that',
+        'evidence item. Keep each evidence list to 3 references unless the',
+        'claim genuinely depends on 4 distinct articles. Respond with JSON only.',
+        '',
+    ])
+    return '\n'.join(lines)</script></pre>
+          </div>
+          <p class="expect ok">Retry block contains prior output, both severities, the cap message, and the fix instructions.</p>
+          <div class="commit-bar"><span class="label">commit</span><code>feat: corrective-retry prompt formatting for validation violations</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 3 -->
+      <details class="task" id="t3">
+        <summary><span class="chev">&#9656;</span><span class="tnum">3</span><span class="ttitle">run_with_validation retry loop</span>
+          <span class="files"><span class="tag modify">synthesis_validator.py</span><span class="tag test">test_synthesis_validator.py</span></span></summary>
+        <div class="body">
+          <p class="files-line">Calls the provider closure, parses, validates; on error-level violations retries once per remaining budget. The final output is always returned (status <code>failed</code>) so callers persist it for review — except an unparseable final attempt, which raises <code>RuntimeError</code> to match today's behavior.</p>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Implementation (append)</div>
+            <pre class="code"><script type="text/plain" class="src">def run_with_validation(call_model, prompt_text, valid_ids, *, max_retries=1,
+                        label='synthesis'):
+    """Call *call_model* and validate; retry once per remaining budget on errors.
+
+    Returns ``(raw_text, parsed, report)``. The final output is returned even
+    when validation fails (status ``failed``) so callers can persist it for
+    review — except when the final attempt is unparseable JSON, which raises
+    ``RuntimeError`` exactly like the pre-validator behavior.
+    """
+    attempts = []
+    prompt = prompt_text
+    raw_text = ''
+    parsed = None
+    for attempt in range(max_retries + 1):
+        raw_text = call_model(prompt)
+        parse_error = None
+        try:
+            parsed = extract_json_object(raw_text)
+            violations = validate_synthesis_payload(parsed, valid_ids)
+        except RuntimeError as exc:
+            parsed = None
+            parse_error = exc
+            violations = [_violation('unparseable_json', '$', str(exc))]
+        attempts.append({
+            'attempt': attempt + 1,
+            'violations': violations,
+            'error_count': sum(1 for v in violations if v['severity'] == 'error'),
+            'warning_count': sum(1 for v in violations if v['severity'] == 'warning'),
+        })
+        if not has_errors(violations):
+            break
+        if attempt < max_retries:
+            print(f'{label}: validation found '
+                  f'{attempts[-1]["error_count"]} error(s); retrying...',
+                  flush=True)
+            prompt = prompt_text + format_violations_for_retry(
+                violations, prior_raw=raw_text)
+        elif parse_error is not None:
+            raise parse_error
+    report = validation_summary(attempts[-1]['violations'],
+                                retries_used=len(attempts) - 1)
+    report['attempts'] = attempts
+    return raw_text, parsed, report</script></pre>
+          </div>
+          <p class="expect ok">Clean-first no retry; bad-then-good one retry; persistently-bad returns a <code>failed</code> report with output intact; unparseable-then-good retries; unparseable-final raises; zero-retries validates but never recalls.</p>
+          <div class="commit-bar"><span class="label">commit</span><code>feat: run_with_validation retry loop around provider calls</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 4 -->
+      <details class="task" id="t4">
+        <summary><span class="chev">&#9656;</span><span class="tnum">4</span><span class="ttitle">Wire into run_deep_synthesis.py</span>
+          <span class="files"><span class="tag modify">run_deep_synthesis.py</span></span></summary>
+        <div class="body">
+          <p class="files-line">No new unit test (provider branches need live APIs); correctness comes from Tasks 1&ndash;3 plus compile/suite checks. Keep the diff minimal: import, add <code>--validate-retries</code> (default 1), wrap each provider branch in a <code>call_model(text)</code> closure, route through the validator, persist the sidecar.</p>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Provider closures routed through the validator</div>
+            <pre class="code"><script type="text/plain" class="src">from synthesis_validator import run_with_validation
+
+# ... in main(), replacing the provider dispatch + parse block:
+    if args.provider == 'anthropic':
+        api_key = os.environ.get('NEWSLETTER_ANTHROPIC_API_KEY', '').strip()
+        if not api_key:
+            raise RuntimeError('NEWSLETTER_ANTHROPIC_API_KEY is required for --provider anthropic')
+        thinking_output_path = raw_output_path.with_name(raw_output_path.name.replace('.raw.txt', '.thinking.txt'))
+        signature_output_path = raw_output_path.with_name(raw_output_path.name.replace('.raw.txt', '.thinking.signature.txt'))
+
+        def call_model(text):
+            # A retry overwrites the thinking sidecars; the final attempt wins.
+            raw, _ = run_anthropic(
+                text, api_key=api_key, model=args.model,
+                system_prompt=system_prompt,
+                thinking_output_path=thinking_output_path,
+                signature_output_path=signature_output_path,
+                output_effort=args.anthropic_output_effort)
+            return raw
+    elif args.provider == 'openai':
+        api_key = os.environ.get('OPENAI_API_KEY', '').strip()
+        if not api_key:
+            raise RuntimeError('OPENAI_API_KEY is required for --provider openai')
+
+        def call_model(text):
+            return run_openai_compatible(
+                text, api_base='https://api.openai.com/v1', api_key=api_key,
+                model=args.model, reasoning_effort=args.reasoning_effort,
+                system_prompt=system_prompt,
+                reasoning_summary_output_path=reasoning_summary_output_path)
+    else:
+        def call_model(text):
+            return run_model(text, model=args.model,
+                             reasoning_effort=args.reasoning_effort)
+
+    valid_ids = {a['article_id'] for a in articles if a.get('article_id')}
+    raw_text, parsed, validation_report = run_with_validation(
+        call_model, prompt_text, valid_ids,
+        max_retries=max(args.validate_retries, 0),
+        label=f'deep_synthesis.{args.provider}')</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 4 · Persist the validation report</div>
+            <pre class="code"><script type="text/plain" class="src">    validation_output_path = output_path.with_name(
+        output_path.name.replace('.json', '.validation.json'))
+    validation_output_path.write_text(
+        json.dumps(validation_report, indent=2, ensure_ascii=False))
+    meta['validation'] = {
+        'status': validation_report['status'],
+        'retries_used': validation_report['retries_used'],
+        'counts_by_code': validation_report['counts_by_code'],
+        'report_path': str(validation_output_path),
+    }
+    if validation_report['status'] == 'failed':
+        print(f'VALIDATION FAILED: {validation_output_path}', flush=True)</script></pre>
+          </div>
+          <p class="expect"><span class="run">python3 -m py_compile scripts/run_deep_synthesis.py scripts/synthesis_validator.py &amp;&amp; python3 -m unittest discover tests -v</span> — compiles; full suite PASSES. A <code>--prompt-only</code> smoke check (no API) confirms no import/arg regressions.</p>
+          <div class="commit-bar"><span class="label">commit</span><code>feat: validate deep synthesis output mechanically with corrective retry</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 5 -->
+      <details class="task" id="t5">
+        <summary><span class="chev">&#9656;</span><span class="tnum">5</span><span class="ttitle">Wire into run_feedback_synthesis.py</span>
+          <span class="files"><span class="tag modify">run_feedback_synthesis.py</span></span></summary>
+        <div class="body">
+          <p class="files-line">Same pattern as Task 4, with one wrinkle: the anthropic closure captures a token count via a <code>nonlocal_tokens</code> dict, which must be defined <strong>before</strong> the provider dispatch.</p>
+          <div class="step"><div class="step-head"><span class="box"></span>Step 3 · Closures + token capture</div>
+            <pre class="code"><script type="text/plain" class="src">from synthesis_validator import run_with_validation
+
+    current_token_count = None
+    nonlocal_tokens = {'count': None}
+
+    if args.provider == 'codex':
+        def call_model(text):
+            return run_codex(text, model=model, reasoning_effort=args.reasoning_effort)
+    else:
+        api_key = os.environ.get(api_key_env, '').strip()
+        if not api_key:
+            raise RuntimeError(f'{api_key_env} is not set')
+
+        if args.provider == 'anthropic':
+            thinking_output_path = raw_output_path.with_name(raw_output_path.name.replace('.raw.txt', '.thinking.txt'))
+            signature_output_path = raw_output_path.with_name(raw_output_path.name.replace('.raw.txt', '.thinking.signature.txt'))
+
+            def call_model(text):
+                # A retry overwrites the thinking sidecars; the final attempt wins.
+                raw, tokens = run_anthropic(
+                    text, api_key=api_key, model=model,
+                    system_prompt=system_prompt,
+                    thinking_output_path=thinking_output_path,
+                    signature_output_path=signature_output_path,
+                    output_effort=args.anthropic_output_effort)
+                nonlocal_tokens['count'] = tokens
+                return raw
+        else:
+            def call_model(text):
+                return run_openai_compatible(
+                    text, api_base=api_base, api_key=api_key, model=model,
+                    reasoning_effort=args.reasoning_effort,
+                    system_prompt=system_prompt,
+                    reasoning_summary_output_path=reasoning_summary_output_path)
+
+    valid_ids = {a['article_id'] for a in articles if a.get('article_id')}
+    raw_text, parsed, validation_report = run_with_validation(
+        call_model, prompt_text, valid_ids,
+        max_retries=max(args.validate_retries, 0),
+        label=f'feedback_synthesis.{args.provider}')
+    current_token_count = nonlocal_tokens['count']</script></pre>
+          </div>
+          <p class="expect ok">The same <code>.validation.json</code> sidecar + <code>meta['validation']</code> persistence as Task 4; compile + full suite PASS.</p>
+          <div class="commit-bar"><span class="label">commit</span><code>feat: validate feedback synthesis output mechanically with corrective retry</code></div>
+        </div>
+      </details>
+
+      <!-- TASK 6 -->
+      <details class="task" id="t6">
+        <summary><span class="chev">&#9656;</span><span class="tnum">6</span><span class="ttitle">Documentation</span>
+          <span class="files"><span class="tag doc">PIPELINE.md</span><span class="tag doc">DECISIONS.md</span></span></summary>
+        <div class="body">
+          <div class="step"><div class="step-head"><span class="box"></span>PIPELINE.md — describe the behavior</div>
+            <pre class="code"><script type="text/plain" class="src">Synthesis and feedback outputs are validated mechanically after parsing:
+every `article_id` must exist in the corpus window, article references must
+be structured objects (no bare-string or prose IDs), and evidence lists are
+capped (error above 4 references, warning at 4). On error-level violations
+the runner sends one corrective retry turn to the same model (configurable
+via `--validate-retries`, default 1). The result is recorded in
+`*.validation.json` and under `validation` in `*.meta.json`; a run that
+still fails validation prints `VALIDATION FAILED` and must not be saved
+without review.</script></pre>
+          </div>
+          <div class="step"><div class="step-head"><span class="box"></span>DECISIONS.md — durable entry</div>
+            <pre class="code"><script type="text/plain" class="src">## 2026-06-10: Grounding validation moved from prompt-only to code
+
+**Decision:** Synthesis and feedback outputs are validated mechanically
+(`scripts/synthesis_validator.py`): article_id corpus membership, structured
+references only, evidence caps (<=3 preferred, 4 tolerated with warning,
+>4 error), no article-ID-like tokens in prose. Error-level violations
+trigger one corrective retry turn to the same model; results are persisted
+in `*.validation.json` sidecars and `meta.validation`. The validator never
+mutates model output and never silently drops content.
+
+**Why:** HANDOVER.md hard invariant — guarantees that can be checked
+mechanically should live in code, not prompt ceremony. Before this, the only
+post-parse check on synthesis output was JSON extraction; ID and evidence
+rules existed solely in the system prompt.
+
+**Constraint going forward:** any refactor must keep validation at least as
+strict; prompt-side grounding rules stay until a deliberate prompt-slimming
+pass measures the effect of removing them.</script></pre>
+          </div>
+          <p class="expect ok"><span class="run">python3 -m py_compile scripts/*.py &amp;&amp; python3 -m unittest discover tests -v</span> — everything compiles, full suite PASSES.</p>
+          <div class="commit-bar"><span class="label">commit</span><code>docs: record mechanical grounding validation decision and pipeline behavior</code></div>
+        </div>
+      </details>
+      </div><!-- /timeline -->
+
+      <h2 id="oos">Out of scope (deliberately)</h2>
+      <div class="out-scope">Pass/fail eval gates (cross-genre count, high-frequency-token headline check, prior-window repeat detection) — separate backlog item.</div>
+      <div class="out-scope">Fixed output envelope schema — prompts backlog; the validator is envelope-agnostic by design so it keeps working when the envelope is later fixed.</div>
+      <div class="out-scope">Auto-repair / mutation of model output — forbidden; the validator only reports and retries.</div>
+      <div class="out-scope">Provider prompt caching for cheaper retries — separate backlog item (cache-friendly ordering).</div>
+      <div class="out-scope"><code>run_adjudication.py</code> — already has its own deterministic citation enforcement.</div>
+
+      <h2 id="review">Self-review notes</h2>
+      <ul>
+        <li><strong>Spec coverage:</strong> ID membership ✓ (Task 1), structured-object refs ✓ (Task 1), evidence counts ✓ (Task 1), valid-JSON with retry ✓ (Task 3), wired into both live runners ✓ (Tasks 4&ndash;5), recorded for review ✓ (sidecar + meta), invariant documented ✓ (Task 6).</li>
+        <li><strong>Types consistent:</strong> <code>run_with_validation(call_model, prompt_text, valid_ids, *, max_retries, label) -&gt; (raw_text, parsed, report)</code> used identically in Tasks 3&ndash;5; violation dict shape <code>{code, path, message, severity}</code> consistent across Tasks 1&ndash;3.</li>
+        <li><strong>Failure semantics preserved:</strong> unparseable JSON on the final attempt raises <code>RuntimeError</code>, matching today's <code>extract_json_object</code> behavior so the <code>run_dual_*</code> wrappers see the same failure mode.</li>
+      </ul>
+
+      <div class="foot-nav">
+        Related artifacts: <a href="target-architecture.html">Sequencing spec &rarr;</a> · <a href="m1-findings-registry.html">M1 registry plan &rarr;</a> · <a href="index.html">Index</a>
+      </div>
+    </div><!-- /wrap -->
+  </main>
+
+  <div id="toast">Copied</div>
+  <script>
+// Shared behavior for the superpowers plan artifacts.
+(function () {
+  'use strict';
+
+  // Render raw code held in <script type="text/plain" class="src"> into its
+  // parent <pre>, so Python `<`/`>`/`&` survive the HTML parser untouched.
+  document.querySelectorAll('pre.code').forEach(function (pre) {
+    var src = pre.querySelector('script.src');
+    if (!src) return;
+    var text = src.textContent.replace(/^\n/, '').replace(/\s+$/, '');
+    pre.textContent = text; // textContent assignment escapes automatically
+    var wrap = document.createElement('div');
+    wrap.className = 'codewrap';
+    pre.parentNode.insertBefore(wrap, pre);
+    wrap.appendChild(pre);
+    var btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', function () { copy(text); });
+    wrap.appendChild(btn);
+  });
+
+  var toast = document.getElementById('toast');
+  function copy(text) {
+    navigator.clipboard.writeText(text).then(function () {
+      if (!toast) return;
+      toast.classList.add('show');
+      setTimeout(function () { toast.classList.remove('show'); }, 1200);
+    });
+  }
+
+  // Expand / collapse all task <details>.
+  var tasks = document.querySelectorAll('details.task');
+  var expand = document.getElementById('expand-all');
+  var collapse = document.getElementById('collapse-all');
+  if (expand) expand.addEventListener('click', function () {
+    tasks.forEach(function (d) { d.open = true; });
+  });
+  if (collapse) collapse.addEventListener('click', function () {
+    tasks.forEach(function (d) { d.open = false; });
+  });
+
+  // Scroll-spy: highlight the nav link for the section in view.
+  var links = Array.prototype.slice.call(
+    document.querySelectorAll('a.nav-link[href^="#"]'));
+  var targets = links.map(function (a) {
+    return document.getElementById(a.getAttribute('href').slice(1));
+  }).filter(Boolean);
+  if ('IntersectionObserver' in window && targets.length) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var id = e.target.id;
+        links.forEach(function (a) {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+        });
+      });
+    }, { rootMargin: '0px 0px -75% 0px' });
+    targets.forEach(function (t) { spy.observe(t); });
+  }
+
+  // Open a task and scroll when its sidebar link is clicked.
+  links.forEach(function (a) {
+    a.addEventListener('click', function () {
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if (el && el.tagName === 'DETAILS') el.open = true;
+    });
+  });
+})();
+  </script>
+</body>
+</html>
