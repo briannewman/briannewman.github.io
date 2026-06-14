@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DB-Native Ingest — Full Plan &amp; Progress</title>
+<style>
+  /* ============================================================
+     PALETTE — color-mockup.html option #7 "Claude standard
+     (ivory + clay)". Swap these :root vars to re-skin.
+     ============================================================ */
+  :root{
+    --bg:#f0eee6; --panel:#faf9f5; --panel2:#ece9df; --line:#e4e0d5; --spine:#d4cfc1;
+    --ink:#1f1d1a; --dim:#55514a; --faint:#8c867a;
+    --accent:#cc785c; --accent-soft:#f3e2da;
+    --done:#3f7d54; --next:#b07d10; --road:#7c5cbf; --pre:#c2410c; --verify:#1d6f8b;
+    --code-bg:#262321; --code-fg:#e8e2d6;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:44px 26px 100px}
+  a{color:var(--accent)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  h1{font-family:var(--serif);font-size:32px;margin:0 0 8px;letter-spacing:-.01em;font-weight:600}
+  .sub{color:var(--dim);font-size:15px;max-width:78ch}
+  .callout{background:rgba(204,120,92,.08);border:1px solid rgba(204,120,92,.28);
+    border-radius:10px;padding:12px 16px;margin:18px 0;font-size:13px;color:var(--dim)}
+  .callout b{color:var(--ink)}
+
+  .overall{display:flex;align-items:center;gap:16px;margin:22px 0 8px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;
+    box-shadow:0 4px 18px rgba(20,24,34,.06)}
+  .overall .lbl{font-family:var(--mono);font-size:12px;color:var(--faint);white-space:nowrap}
+  .bar{flex:1;height:9px;background:var(--panel2);border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--done),#5fa376);transition:width .25s ease}
+  .pct{font-family:var(--mono);font-size:13px;color:var(--done);min-width:46px;text-align:right}
+  .btn{font-family:var(--mono);font-size:11px;color:var(--dim);background:var(--panel);
+    border:1px solid var(--line);border-radius:6px;padding:6px 11px;cursor:pointer}
+  .btn:hover{color:var(--ink);border-color:var(--spine)}
+  .toolbar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:26px;flex-wrap:wrap}
+
+  h2{font-size:13px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;
+    color:var(--faint);margin:46px 0 16px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  .prose{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 22px;
+    margin-bottom:14px;box-shadow:0 4px 18px rgba(20,24,34,.05)}
+  .prose h3{font-family:var(--serif);margin:0 0 8px;font-size:16px;font-weight:600}
+  .prose p{margin:0 0 11px;color:var(--dim);font-size:13.5px}
+  .prose ul{margin:0 0 8px;padding-left:18px;color:var(--dim);font-size:13.5px}
+  .prose li{margin:5px 0}
+  .prose .q{color:var(--ink);font-weight:600}
+  pre.chain{background:var(--code-bg);color:var(--code-fg);border:1px solid #34302b;border-radius:10px;
+    padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:11.5px;line-height:1.5}
+  code{font-family:var(--mono);font-size:.86em;background:var(--panel2);
+    border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:#5e4a40;
+    overflow-wrap:anywhere}
+
+  .phase{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 22px 20px;
+    margin-bottom:14px;box-shadow:0 4px 18px rgba(20,24,34,.05)}
+  .phase.collapsed .body{display:none}
+  .phead{display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none;min-width:0}
+  .pid{font-family:var(--mono);font-size:21px;letter-spacing:-.02em;min-width:42px;color:var(--ink)}
+  .ptitle{font-family:var(--serif);font-size:18px;letter-spacing:-.01em;flex:1;font-weight:600;min-width:0}
+  .ptitle small{display:block;font-family:var(--sans);font-size:12.5px;color:var(--faint);font-weight:400;letter-spacing:0;margin-top:3px}
+  .badge{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;
+    padding:4px 9px;border-radius:5px;font-weight:700;white-space:nowrap}
+  .b-done{background:rgba(63,125,84,.14);color:var(--done);border:1px solid rgba(63,125,84,.32)}
+  .b-next{background:rgba(176,125,16,.14);color:var(--next);border:1px solid rgba(176,125,16,.34)}
+  .b-road{background:rgba(124,92,191,.14);color:var(--road);border:1px solid rgba(124,92,191,.32)}
+  .b-pre{background:rgba(194,65,12,.13);color:var(--pre);border:1px solid rgba(194,65,12,.3)}
+  .pcount{font-family:var(--mono);font-size:12px;color:var(--faint);min-width:42px;text-align:right}
+  .caret{color:var(--faint);font-size:12px;transition:transform .15s}
+  .phase.collapsed .caret{transform:rotate(-90deg)}
+
+  .body{margin-top:14px}
+  .pbar{height:5px;background:var(--panel2);border-radius:4px;overflow:hidden;margin-bottom:16px}
+  .pbar>i{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+  .detail{font-size:13px;color:var(--dim);margin:0 0 16px;overflow-wrap:anywhere}
+  .detail p{margin:0 0 9px}
+  .detail ul{margin:0 0 9px;padding-left:18px}
+  .detail li{margin:4px 0}
+  .detail b{color:var(--ink)}
+  .sec{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    margin:4px 0 8px;display:flex;align-items:center;gap:8px}
+  .sec.build{color:var(--accent)} .sec.verify{color:var(--verify)}
+  .sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  ul.cl{list-style:none;margin:0 0 14px;padding:0}
+  ul.cl li{display:flex;gap:11px;align-items:flex-start;padding:6px 0;font-size:13.5px;color:var(--dim)}
+  ul.cl input{appearance:none;-webkit-appearance:none;flex:0 0 auto;width:17px;height:17px;margin-top:1px;
+    border:1.5px solid var(--spine);border-radius:4px;background:var(--panel);cursor:pointer;position:relative;transition:.12s}
+  ul.cl input:hover{border-color:var(--accent)}
+  ul.cl input:checked{background:var(--done);border-color:var(--done)}
+  ul.cl.verify input:hover{border-color:var(--verify)}
+  ul.cl.verify input:checked{background:var(--verify);border-color:var(--verify)}
+  ul.cl input:checked::after{content:"";position:absolute;left:5px;top:1.5px;width:4px;height:9px;
+    border:solid var(--panel);border-width:0 2px 2px 0;transform:rotate(45deg)}
+  ul.cl label{cursor:pointer}
+  ul.cl li.checked label{color:var(--faint);text-decoration:line-through}
+
+  .decide{background:rgba(194,65,12,.07);border:1px solid rgba(194,65,12,.25);border-radius:8px;
+    padding:11px 14px;margin:4px 0 14px;font-size:12.5px;color:var(--dim)}
+  .decide b{color:var(--pre)}
+  .files{font-size:13px;color:var(--dim);overflow-wrap:anywhere}
+  .files li{margin:6px 0}
+  footer{margin-top:54px;color:var(--faint);font-size:12px;font-family:var(--mono);
+    border-top:1px solid var(--line);padding-top:18px;line-height:1.7}
+  @media(max-width:720px){
+    .wrap{padding:34px 18px 56px;overflow:hidden}
+    h1{font-size:28px}
+    .overall{align-items:flex-start;flex-direction:column;gap:10px}
+    .bar{width:100%}
+    .toolbar{justify-content:flex-start}
+    .phase,.prose{padding:16px 18px;overflow:hidden}
+    .phead{align-items:flex-start;flex-wrap:wrap;gap:8px 10px}
+    .pid{font-size:18px;min-width:30px}
+    .ptitle{font-size:16px;flex-basis:calc(100% - 42px)}
+    .badge,.pcount,.caret{margin-top:2px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">newsletter-intel · full plan + live progress</div>
+  <h1>DB-Native Ingest — Phases &minus;1 → 2 (3–4 roadmap)</h1>
+  <p class="sub">Move the front half of the pipeline into <code>intel.db</code> with a re-parseable
+  <b>Layer 0</b> (verbatim fetch) and <b>Layer 1</b> (parsed articles), plus end-to-end <b>claim-level
+  traceability in the DB</b> and a <b>no-files</b> end state — <code>data/runs/</code> JSON becomes a
+  transitional export, not the permanent provenance store.</p>
+
+  <div class="callout">
+    <b>For agents:</b> every checklist below — build steps <i>and</i> verification — persists in this browser
+    (<code>localStorage</code>) and feeds the live progress bars. <b>Export</b> copies state as JSON for a
+    handover; <b>Import</b> restores it. Anchor work on <b>function names, not line numbers</b>: the
+    implementation checkout (<code>…/newsletter-intel-fable</code>) is ahead of the review copy
+    (<code>…/newsletter-intel-codex</code>), so absolute lines drift — where they differ, the implementation
+    checkout wins. Authoritative source: <code>docs/plans/db-native-ingest-plan.md</code>.
+  </div>
+
+  <div class="overall">
+    <span class="lbl">overall</span>
+    <div class="bar"><i id="ovbar"></i></div>
+    <span class="pct" id="ovpct">0%</span>
+  </div>
+  <div class="toolbar">
+    <button class="btn" id="expandBtn">Expand all</button>
+    <button class="btn" id="expBtn">Export</button>
+    <button class="btn" id="impBtn">Import</button>
+    <button class="btn" id="resetBtn">Reset</button>
+  </div>
+
+  <!-- ============ CONTEXT ============ -->
+  <h2>Why this, and the hard requirements</h2>
+  <div class="prose">
+    <p><b>Why.</b> The findings registry that drives delta synthesis is only ~12 days deep because the
+    cold-start seed ran over a thin, flawed input set. We rebuild from a real historical foundation by
+    <b>reprocessing raw article history through today's pipeline</b> (not importing old findings). That
+    exposed the gap: ingest is still file-based (<code>fetch → substack_rss_raw.json → bundles →
+    extraction</code>) while extraction already writes the DB. The front half must become DB-native.</p>
+    <ul>
+      <li><span class="q">Requirement 1 — claim-level traceability, in the DB.</span> Every finding traces,
+      <i>via the DB</i>, to the synthesis/adjudication run that produced it → to the specific <b>claims</b>
+      it rests on (with the "why") → to the article extraction → to the verbatim fetched feed. End state is
+      <b>no files</b>: claim-level links and rationale live in DB tables, not only saved JSON.</li>
+      <li><span class="q">Requirement 2 — save state before starting.</span> Per-phase checkpoints so any
+      phase reverts to a known-working state.</li>
+    </ul>
+    <p><b>Scope of THIS PR:</b> Phases −1 → 2 (pre-flight checkpoints, schema incl. the claim-level
+    provenance tables, fetch dual-write, parse step, <code>--source db</code> extraction) + a runbook for the
+    live 7-day proof. Phase 3 (populate provenance; retire the JSON middle) and Phase 4 (historical backfill)
+    are <b>roadmap, deferred to follow-on PRs</b>. The claim-level schema lands now (cheap, additive); the
+    wiring that fills it is Phase 3.</p>
+  </div>
+
+  <!-- ============ DESIGN QUESTIONS ============ -->
+  <h2>Three design questions, answered</h2>
+  <div class="prose">
+    <p><span class="q">1 · Visibility into the synthesis run that created a finding?</span> Today
+    <code>run_slug</code> is a free string on <code>findings.first_seen_run</code> /
+    <code>finding_events.run_slug</code>, pointing at a <code>data/runs/&lt;slug&gt;/</code> folder — seeing
+    the run means opening a <i>file</i>. There is <b>no runs table</b>. The no-files end state needs one: a new
+    <code>synthesis_runs</code> table that <code>run_slug</code> is a (logical) FK to, holding run metadata +
+    the synthesis/adjudication output. <code>finding_events</code> gives the full per-run history.</p>
+    <p><span class="q">2 · Is a finding linked with the claim or the article?</span> Today: the <b>article</b>
+    only (<code>findings.evidence</code> = JSON article_ids). Target: the <b>claim is primary</b> — and since
+    <code>claim_id = article_id::claim_N</code> already embeds the article, the article link is a derivable
+    rollup. New <code>finding_claims</code> is the source of truth; <code>findings.evidence</code> stays as a
+    denormalized rollup the existing <code>shortlist_candidates</code> overlap matcher already reads.</p>
+    <p><span class="q">3 · Where does the synthesis go?</span> Both already render markdown
+    (<code>deep_synthesis.*.md</code>, <code>adjudication.md</code>). The DB keeps only folded findings/events,
+    never the narrative. Target (no files): persist both rendered <code>.md</code> blobs verbatim into
+    <code>synthesis_runs</code> (<code>synthesis_md</code> / <code>adjudication_md</code>) — markdown with links,
+    not strict JSON columns (freeform, hard to schematize). Structured provenance stays in
+    <code>finding_claims</code>; the human-readable "why" is the markdown blob.</p>
+  </div>
+
+  <h2>Traceability chain — target (all joins in the DB)</h2>
+  <pre class="chain">synthesis_runs(run_slug PK, run_date, source, lanes, models, window,
+               synthesis_md, adjudication_md)        &#9664;&#9472; synthesis as MARKDOWN (with links), IN THE DB
+   &#9650; finding.first_seen_run / finding_events.run_slug   (FK &#8594; run visibility)
+finding
+  &#9500;&#9472; finding_claims(finding_id, claim_id, run_slug, role, rationale)   &#9664;&#9472; PRIMARY link + per-run "why"
+  &#9474;        &#9660;            (PK incl. run_slug &#8594; event table)
+  &#9474;   claims(claim_id = article_id::claim_N)  +  article_extractions(article_id)
+  &#9474;        &#9660; same article_id, carried never recomputed
+  &#9492;&#9472; findings.evidence[] = article_ids (rollup)   raw_articles(article_id, current_version_id)
+                                                  &#9474;  &#9660; raw_article_versions(article_id, fetch_response_id)
+                                                  &#9660;
+                                           fetch_responses(id)  (verbatim feed/fulltext + response_hash)</pre>
+
+  <h2>Corrections to the original draft</h2>
+  <div class="prose">
+    <ul>
+      <li><b>No lib.py regression / DB source already present.</b> <code>--source db</code> already exists in
+      the implementation checkout — <code>prepare_synthesis_corpus(..., source='db')</code>,
+      <code>synthesis_corpus.load_articles_from_db</code>, and <code>build_synthesis_enrichment.py</code>. The
+      draft's <code>git checkout scripts/lib.py</code> prerequisite is <b>dropped</b>.</li>
+      <li><b><code>data/tmp/fetch-probe/</code> scratch is not relied on</b> (<code>data/tmp/</code> is
+      gitignored). Build <code>parse_fetch_responses.py</code> from the existing parse helpers in
+      <code>fetch_substack_rss.py</code>.</li>
+      <li><b>Working corpus paths</b> are <code>data/tmp/corpus/{substack_rss_raw,newsletters,article_bodies}.json</code>
+      (<code>lib.WORKING_*</code>, gitignored); committed <code>data/newsletters.json</code> etc. are archive
+      copies. Parity gates compare against the file the fetch run writes.</li>
+    </ul>
+  </div>
+
+  <!-- ============ PHASES ============ -->
+  <h2>Phases — detail, build checklist &amp; verification</h2>
+  <div id="phases">
+
+    <!-- ===== PHASE -1 ===== -->
+    <div class="phase" data-phase="p-1">
+      <div class="phead">
+        <span class="pid">&minus;1</span>
+        <span class="ptitle">Pre-flight checkpoints<small>Save state for rollback before any phase mutates the DB</small></span>
+        <span class="badge b-pre">Do first</span>
+        <span class="pcount"></span><span class="caret">&#9660;</span>
+      </div>
+      <div class="body">
+        <div class="pbar"><i></i></div>
+        <div class="detail">
+          <p>Per-phase git checkpoints + a DB snapshot before the migration mutates anything, so any phase
+          reverts to a known-good state independent of the durability decision below.</p>
+        </div>
+        <div class="decide"><b>Decision (recommended) — DB durability:</b> do NOT commit verbatim Layer 0 into
+        git. It holds authenticated full article bodies (ToS/licensing exposure + unbounded repo bloat — every
+        fetch rewrites the blob permanently). <b>Recommended:</b> untrack <code>data/intel.db</code> (gitignore
+        + <code>git rm --cached</code>); durability via per-phase snapshot tarballs + <b>litestream</b>.
+        <b>Alternative:</b> keep a tracked structured DB but route <code>fetch_responses.response_body</code>
+        to a gitignored sidecar store, referenced by id. Either way: <b>no authenticated full-text in git
+        history.</b> Make this call before Phase 1 writes Layer 0.</div>
+        <div class="sec build">Build</div>
+        <ul class="cl">
+          <li><input type="checkbox" id="t.-1.1"><label for="t.-1.1">Tag pre-work baseline <code>checkpoint/baseline</code>; each phase runs on its own branch off the prior known-good commit, tag <code>checkpoint/phase-N</code> on pass (rollback = <code>git reset --hard</code> to the prior tag)</label></li>
+          <li><input type="checkbox" id="t.-1.2"><label for="t.-1.2">Snapshot <code>data/intel.db</code> &#8594; <code>data/tmp/backups/intel.db.v3.&lt;ts&gt;.bak</code> (gitignored) before the v3&#8594;v4 migration; repeat at each phase boundary that writes rows</label></li>
+          <li><input type="checkbox" id="t.-1.3"><label for="t.-1.3"><b>Make the DB-durability call</b> (untrack vs sidecar) before Phase 1 writes Layer 0; add <code>data/tmp/backups/</code> to <code>.gitignore</code></label></li>
+        </ul>
+        <div class="sec verify">Verify</div>
+        <ul class="cl verify">
+          <li><input type="checkbox" id="v.-1.1"><label for="v.-1.1"><code>checkpoint/baseline</code> tag exists</label></li>
+          <li><input type="checkbox" id="v.-1.2"><label for="v.-1.2"><code>data/tmp/backups/intel.db.v3.*.bak</code> present and opens with <code>PRAGMA user_version == 3</code> (matches the committed DB)</label></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===== PHASE 0 ===== -->
+    <div class="phase" data-phase="p0">
+      <div class="phead">
+        <span class="pid">0</span>
+        <span class="ptitle">Schema — additive, no behavior change<small>intel.db v4; inert behind the opt-in gate</small></span>
+        <span class="badge b-done">Done · PR #39</span>
+        <span class="pcount"></span><span class="caret">&#9660;</span>
+      </div>
+      <div class="body">
+        <div class="pbar"><i></i></div>
+        <div class="detail">
+          <p>Added to <code>scripts/intel_db.py</code> following its <code>PRAGMA user_version</code> pattern.
+          New <code>RAW_LAYER_SCHEMA_SQL</code>, all <code>CREATE TABLE IF NOT EXISTS</code>:</p>
+          <ul>
+            <li><b><code>fetch_responses</code> (Layer 0):</b> <code>id</code> PK, <code>fetch_run_id, url,
+            fetched_at, http_status, response_body, content_type, response_hash</code>,
+            <code>UNIQUE(url, response_hash)</code>. <code>response_body</code> nullable +
+            <code>response_body_ref</code> if split to a sidecar; inline if the DB is untracked. Re-parse
+            metadata: <code>feed_kind</code> ('substack'|'extra'|'fulltext') + <code>feed_meta_json</code>.
+            Fulltext rows store no <code>article_id</code> — join key is the GET's URL stored canonicalized in
+            indexed <code>norm_url</code>, resolved later against a map built from <b>both</b>
+            <code>raw_articles.raw_link</code> and <code>.link</code> (each via the same
+            <code>lib.canonicalize_link</code>, so a substack.com raw_link vs custom-domain link can't strand
+            the response). <code>article_id</code> is computed <b>once, at parse</b>, never at fetch.</li>
+            <li><b>Layer 1 is two tables</b> (teaser + full upgrade are two parses of one <code>article_id</code>,
+            can't share an <code>article_id</code>-PK row):
+            <code>raw_articles</code> (current row, <code>article_id</code> PK, the full
+            <code>parse_rss_items</code> field set + <code>published_at</code> derived via <code>lib.parse_date</code>,
+            winning-version body, <code>current_version_id</code>) and <code>raw_article_versions</code>
+            (append-only, surrogate <code>version_id</code> PK, logical <code>fetch_response_id</code> with
+            sentinel <code>0</code> for Tier-B/no-Layer-0, <code>UNIQUE(article_id, fetch_response_id)</code>,
+            <code>ON CONFLICT … DO UPDATE</code> so a better re-parse refreshes body in place). Winner picked by
+            <code>body_is_full DESC, body_length DESC, parsed_at DESC</code>.</li>
+            <li><b><code>finding_claims</code></b> (event table): <code>PRIMARY KEY (finding_id, claim_id,
+            run_slug)</code> so per-run rationale isn't clobbered; index on <code>claim_id</code>. Populated in
+            Phase 3.</li>
+            <li><b><code>synthesis_runs</code></b>: <code>run_slug</code> PK, run/window metadata,
+            <code>synthesis_md</code> / <code>adjudication_md</code> blobs. Populated in Phase 3.</li>
+          </ul>
+          <p>Migration: bump <code>SCHEMA_VERSION</code> 3&#8594;4, add <code>_migrate_v3_to_v4</code>, chain in
+          <code>connect()</code>. Accessors (no self-commit, caller owns txn): <code>insert_fetch_response</code>,
+          <code>upsert_raw_article_version</code>, <code>load_raw_articles_window</code>,
+          <code>link_finding_claim</code>. All new writes gated behind <code>raw_ingest_enabled()</code>.</p>
+        </div>
+        <div class="sec build">Build</div>
+        <ul class="cl">
+          <li><input type="checkbox" id="t.0.1" data-default="1"><label for="t.0.1"><code>fetch_responses</code> table + <code>norm_url</code> / <code>feed_kind</code> indexes</label></li>
+          <li><input type="checkbox" id="t.0.2" data-default="1"><label for="t.0.2"><code>raw_articles</code> + <code>raw_article_versions</code> (surrogate PK, sentinel 0, <code>UNIQUE(article_id, fetch_response_id)</code>, winner tie-breaker)</label></li>
+          <li><input type="checkbox" id="t.0.3" data-default="1"><label for="t.0.3"><code>finding_claims</code> <code>PK(finding_id, claim_id, run_slug)</code> + <code>synthesis_runs</code> (schema only)</label></li>
+          <li><input type="checkbox" id="t.0.4" data-default="1"><label for="t.0.4">Bump <code>SCHEMA_VERSION</code> 3&#8594;4; <code>_migrate_v3_to_v4</code>; chain in <code>connect()</code></label></li>
+          <li><input type="checkbox" id="t.0.5" data-default="1"><label for="t.0.5">Accessors <code>insert_fetch_response</code>, <code>upsert_raw_article_version</code>, <code>load_raw_articles_window</code>, <code>link_finding_claim</code>; <code>raw_ingest_enabled()</code> gate</label></li>
+        </ul>
+        <div class="sec verify">Verify</div>
+        <ul class="cl verify">
+          <li><input type="checkbox" id="v.0.1" data-default="1"><label for="v.0.1">On a copy of <code>intel.db</code>: <code>connect()</code> &#8594; <code>PRAGMA user_version == 4</code> and all five tables exist</label></li>
+          <li><input type="checkbox" id="v.0.2" data-default="1"><label for="v.0.2">Round-trip <code>insert_fetch_response</code> &#8594; <code>upsert_raw_article_version</code> <b>twice for one <code>article_id</code></b> (teaser then full): <code>raw_articles</code> holds the full body, <code>current_version_id</code> repointed, <code>raw_article_versions</code> holds both rows</label></li>
+          <li><input type="checkbox" id="v.0.3" data-default="1"><label for="v.0.3"><code>load_raw_articles_window</code> returns the current row and its <code>(article_id, item)</code> pair matches the <code>corpus_items()</code> shape</label></li>
+          <li><input type="checkbox" id="v.0.4" data-default="1"><label for="v.0.4">Round-trip <code>link_finding_claim</code> for the <b>same (finding, claim) across two <code>run_slug</code>s</b> — both rationales persist</label></li>
+          <li><input type="checkbox" id="v.0.5" data-default="1"><label for="v.0.5"><code>python3 -m unittest tests.test_intel_db</code> green (extended); <code>python3 -m py_compile scripts/*.py</code></label></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===== PHASE 1 ===== -->
+    <div class="phase" data-phase="p1">
+      <div class="phead">
+        <span class="pid">1</span>
+        <span class="ptitle">Fetch dual-write + separate parse step<small>Capture verbatim Layer 0; derive Layer 1 in a re-runnable parse</small></span>
+        <span class="badge b-next">Next</span>
+        <span class="pcount"></span><span class="caret">&#9660;</span>
+      </div>
+      <div class="body">
+        <div class="pbar"><i></i></div>
+        <div class="detail">
+          <p><b><code>scripts/fetch_substack_rss.py</code>:</b> <code>fetch_feed</code> discards the verbatim
+          response via <code>ET.fromstring(r.content)</code> — restructure it to return <code>(url, status,
+          response_text, content_type, parsed_root)</code>. Both feed paths (<code>_fetch_substack_feed</code>,
+          <code>fetch_extra_feed_entries</code>) route through it, so it's the single Layer 0 capture point;
+          thread the verbatim tuple back so <code>main()</code> writes one <code>fetch_responses</code> row per
+          feed. <code>fetch_full_text</code> is <b>not</b> unchanged: capture its per-article authenticated GET
+          <code>response.text</code> as a <code>feed_kind='fulltext'</code> row (<code>norm_url =
+          canonicalize_link(url)</code>, no <code>article_id</code>). Keep writing
+          <code>substack_rss_raw.json</code>. Reuse <code>parse_rss_items</code>, <code>is_truncated</code>,
+          <code>extract_preloads</code>/<code>TextExtractor</code> as-is.</p>
+          <p><b>New <code>scripts/parse_fetch_responses.py</code>:</b> reads <code>fetch_responses</code> and
+          dispatches on <code>feed_kind</code> — 'substack' → <code>ET.fromstring</code> →
+          <code>parse_rss_items(root, feed_meta_json, cutoff=None)</code> → <code>stable_article_id</code> →
+          <code>upsert_raw_article_version</code>; 'extra' → a <code>parse_extra_items</code> extracted from the
+          inline loop in <code>fetch_extra_feed_entries</code>; 'fulltext' →
+          <code>extract_preloads</code>/<code>TextExtractor</code> → resolve <code>norm_url</code> to an
+          already-parsed <code>article_id</code> → upsert as the <b>full</b> version (wins the
+          <code>raw_articles</code> upsert). Process feed rows before fulltext; an unmatched fulltext row is
+          logged &amp; skipped. <code>cutoff=None</code> keeps every item (window-filter later). Re-runnable:
+          re-parse when the parser improves, no re-fetch.</p>
+        </div>
+        <div class="sec build">Build</div>
+        <ul class="cl">
+          <li><input type="checkbox" id="t.1.1"><label for="t.1.1">Restructure <code>fetch_feed</code> to return <code>(url, status, response_text, content_type, parsed_root)</code></label></li>
+          <li><input type="checkbox" id="t.1.2"><label for="t.1.2"><code>main()</code> writes one <code>fetch_responses</code> row per feed (<code>feed_kind</code> + <code>feed_meta_json</code>) when the flag is on</label></li>
+          <li><input type="checkbox" id="t.1.3"><label for="t.1.3"><code>fetch_full_text</code>: capture <code>response.text</code> as a <code>fulltext</code> row (<code>norm_url = canonicalize_link(url)</code>, no <code>article_id</code>)</label></li>
+          <li><input type="checkbox" id="t.1.4"><label for="t.1.4">Keep writing <code>substack_rss_raw.json</code> (dual-write)</label></li>
+          <li><input type="checkbox" id="t.1.5"><label for="t.1.5">Extract <code>parse_extra_items</code> out of <code>fetch_extra_feed_entries</code>'s inline loop (shared by fetch + re-parse)</label></li>
+          <li><input type="checkbox" id="t.1.6"><label for="t.1.6">New <code>scripts/parse_fetch_responses.py</code> dispatching on <code>feed_kind</code> (substack / extra / fulltext)</label></li>
+          <li><input type="checkbox" id="t.1.7"><label for="t.1.7">Order: feed rows before fulltext; unmatched fulltext logged &amp; skipped (no orphan version); <code>layer0_present=1</code> on every Layer-0 version</label></li>
+          <li><input type="checkbox" id="t.1.8"><label for="t.1.8">Tag <code>checkpoint/phase-1</code></label></li>
+        </ul>
+        <div class="sec verify">Verify</div>
+        <ul class="cl verify">
+          <li><input type="checkbox" id="v.1.1"><label for="v.1.1"><code>fetch_substack_rss.py --days 2</code> (flag on) dual-writes feed + fulltext Layer 0</label></li>
+          <li><input type="checkbox" id="v.1.2"><label for="v.1.2">After <code>parse_fetch_responses</code>: <code>raw_articles</code> matches the <code>article_id</code>-keyed <code>newsletters.json</code>/<code>article_bodies.json</code> (same id set; full bodies match once fulltext rows are parsed)</label></li>
+          <li><input type="checkbox" id="v.1.3"><label for="v.1.3">Re-run <code>parse_fetch_responses.py</code> &#8594; idempotent</label></li>
+          <li><input type="checkbox" id="v.1.4"><label for="v.1.4">New test: fixture RSS body + fixture fulltext HTML &#8594; a teaser version row and a superseding full version (<code>body_is_full=1</code>) for one <code>article_id</code>; <code>current_version_id</code> points at the full one; <code>fetch_response_id</code> set on both</label></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===== PHASE 2 ===== -->
+    <div class="phase" data-phase="p2">
+      <div class="phead">
+        <span class="pid">2</span>
+        <span class="ptitle">Extraction reads from DB + 7-day proof<small>Milestone: end-to-end DB-native run with full traceability</small></span>
+        <span class="badge b-next">Next · milestone</span>
+        <span class="pcount"></span><span class="caret">&#9660;</span>
+      </div>
+      <div class="body">
+        <div class="pbar"><i></i></div>
+        <div class="detail">
+          <p><b><code>scripts/prepare_interpretive_inputs.py</code>:</b> add <code>--source db</code> building
+          bundles from <code>raw_articles</code> via <code>intel_db.load_raw_articles_window</code>, alongside
+          the default and <code>--from-corpus</code>. It emits the same <code>(article_id, item)</code> pairs and
+          <b>passes <code>article_id</code> as <code>forced_id</code></b> — so the traceable id carries unbroken
+          into <code>article_extractions</code>. <code>batch_extract.py</code> is unchanged (already calls
+          <code>replace_article_extraction</code>).</p>
+          <p><b>Milestone gate (go/no-go, run locally — needs auth cookies + API spend):</b> real
+          <code>--days 7</code> fetch (flag on) → <code>parse_fetch_responses</code> → <code>raw_articles</code>
+          → <code>prepare_interpretive_inputs --source db</code> → <code>batch_extract</code> →
+          <code>claims</code>. Ship as a runbook in <code>docs/handover/</code>. Tag
+          <code>checkpoint/phase-2</code> only after it passes.</p>
+        </div>
+        <div class="sec build">Build</div>
+        <ul class="cl">
+          <li><input type="checkbox" id="t.2.1"><label for="t.2.1"><code>prepare_interpretive_inputs.py --source db</code> via <code>load_raw_articles_window</code></label></li>
+          <li><input type="checkbox" id="t.2.2"><label for="t.2.2">Pass <code>article_id</code> as <code>forced_id</code> into extraction</label></li>
+          <li><input type="checkbox" id="t.2.3"><label for="t.2.3">Write the 7-day proof runbook in <code>docs/handover/</code></label></li>
+          <li><input type="checkbox" id="t.2.4"><label for="t.2.4">Tag <code>checkpoint/phase-2</code> after the milestone passes</label></li>
+        </ul>
+        <div class="sec verify">Verify (milestone, local)</div>
+        <ul class="cl verify">
+          <li><input type="checkbox" id="v.2.1"><label for="v.2.1">Real <code>--days 7</code> fetch → parse → <code>--source db</code> extract → <code>claims</code> completes</label></li>
+          <li><input type="checkbox" id="v.2.2"><label for="v.2.2">DB bundles == file bundles for the window; claims land</label></li>
+          <li><input type="checkbox" id="v.2.3"><label for="v.2.3"><b>Traceability spot-check</b> resolves every DB hop for a sample article: <code>article_extractions(article_id) → claims(article_id::claim_N) → raw_articles → current_version_id → raw_article_versions → fetch_response_id → fetch_responses(id)</code> — no <code>data/runs/</code> file read</label></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===== PHASE 3 ===== -->
+    <div class="phase collapsed" data-phase="p3">
+      <div class="phead">
+        <span class="pid">3</span>
+        <span class="ptitle">Fill claim-level provenance + retire the JSON middle<small>Roadmap — deferred to a follow-on PR</small></span>
+        <span class="badge b-road">Roadmap</span>
+        <span class="pcount"></span><span class="caret">&#9660;</span>
+      </div>
+      <div class="body">
+        <div class="pbar"><i></i></div>
+        <div class="detail">
+          <p>Extend the synthesis evidence schema so findings emit <b>claim_ids</b> (today
+          <code>registry_ingest._evidence_ids</code> keeps only <code>article_id</code>); have
+          <code>registry_ingest</code> persist a <code>finding_claims</code> row per (claim, run) with
+          <code>(role, rationale)</code> and write each run's <code>synthesis_md</code>/<code>adjudication_md</code>
+          into <code>synthesis_runs</code> so <code>data/runs/</code> JSON stops being load-bearing.
+          <b>Ordering:</b> <code>finding_claims.claim_id</code> references <code>claims</code> (populate after the
+          cited claims exist) and <code>synthesis_runs</code> rows must exist before findings reference their
+          <code>run_slug</code>. The synthesis substrate already speaks <code>--source db</code>; the remaining
+          ingest gap is the pre-synthesis corpus build on <code>build_newsletters.py</code> +
+          <code>registry_ingest.load_article_lookup</code>. Adjudication stays on the provenance path —
+          <code>finding_events.run_slug</code> → persisted rationale must stay intact.</p>
+        </div>
+        <div class="sec build">Build</div>
+        <ul class="cl">
+          <li><input type="checkbox" id="t.3.1"><label for="t.3.1">Findings emit <code>claim_ids</code> (extend <code>registry_ingest._evidence_ids</code>)</label></li>
+          <li><input type="checkbox" id="t.3.2"><label for="t.3.2">Persist a <code>finding_claims</code> row per (claim, run) with <code>role</code> + <code>rationale</code></label></li>
+          <li><input type="checkbox" id="t.3.3"><label for="t.3.3">Write <code>synthesis_md</code>/<code>adjudication_md</code> into <code>synthesis_runs</code>; retire <code>data/runs/</code> as load-bearing</label></li>
+          <li><input type="checkbox" id="t.3.4"><label for="t.3.4">Grow a DB source on <code>build_newsletters.py</code> + <code>registry_ingest.load_article_lookup</code></label></li>
+        </ul>
+        <div class="sec verify">Verify</div>
+        <ul class="cl verify">
+          <li><input type="checkbox" id="v.3.1"><label for="v.3.1">Traceability spot-check extends: <code>finding → finding_claims → claims</code> and <code>finding_events.run_slug → persisted rationale</code>, all without reading any <code>data/runs/</code> file</label></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===== PHASE 4 ===== -->
+    <div class="phase collapsed" data-phase="p4">
+      <div class="phead">
+        <span class="pid">4</span>
+        <span class="ptitle">Historical backfill<small>Roadmap — separate effort</small></span>
+        <span class="badge b-road">Roadmap</span>
+        <span class="pcount"></span><span class="caret">&#9660;</span>
+      </div>
+      <div class="body">
+        <div class="pbar"><i></i></div>
+        <div class="detail">
+          <p>Tier A real <code>--days 150</code> fetch → Layer 0/1; Tier B parsed-only (~253 not-in-feed) from
+          <code>article_bodies.json</code> + <code>newsletters.json</code> via <code>corpus_items()</code> → a
+          <code>raw_article_versions</code> row (<code>layer0_present=0</code>, sentinel
+          <code>fetch_response_id=0</code>) that upserts <code>raw_articles</code>. Extract the union;
+          re-synthesize <b>weekly-by-publish-date</b> windows chronologically → <code>registry_ingest</code> each
+          in order → registry rebuilt with real strengthen-over-time. Run in the refresh worktree; promote via
+          <code>save_run.py</code>; never commit <code>data/tmp/</code>.</p>
+        </div>
+        <div class="sec build">Build</div>
+        <ul class="cl">
+          <li><input type="checkbox" id="t.4.1"><label for="t.4.1">Tier A: real <code>--days 150</code> fetch &#8594; Layer 0/1</label></li>
+          <li><input type="checkbox" id="t.4.2"><label for="t.4.2">Tier B: parsed-only (~253) via <code>corpus_items()</code> &#8594; sentinel versions</label></li>
+          <li><input type="checkbox" id="t.4.3"><label for="t.4.3">Re-synthesize weekly-by-publish-date windows chronologically &#8594; <code>registry_ingest</code> in order</label></li>
+          <li><input type="checkbox" id="t.4.4"><label for="t.4.4">Registry rebuilt with strengthen-over-time; promote via <code>save_run.py</code>; never commit <code>data/tmp/</code></label></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ CRITICAL FILES ============ -->
+  <h2>Critical files</h2>
+  <div class="prose">
+    <ul class="files">
+      <li><code>scripts/intel_db.py</code> — <code>RAW_LAYER_SCHEMA_SQL</code>, <code>_migrate_v3_to_v4</code>, accessors, <code>raw_ingest_enabled()</code>, <code>SCHEMA_VERSION=4</code>.</li>
+      <li><code>scripts/fetch_substack_rss.py</code> — verbatim capture in <code>fetch_feed</code> (feed Layer 0) and <code>fetch_full_text</code> (fulltext Layer 0), dual-write; extract <code>parse_extra_items</code>.</li>
+      <li><code>scripts/parse_fetch_responses.py</code> — <b>new</b>, Layer-0→Layer-1 re-runnable parse, dispatching on <code>feed_kind</code>.</li>
+      <li><code>scripts/prepare_interpretive_inputs.py</code> — <code>--source db</code> over <code>raw_articles</code>, <code>article_id</code> as <code>forced_id</code>.</li>
+      <li><code>.gitignore</code> — add <code>data/tmp/backups/</code>; if untracking the DB, also <code>data/intel.db</code> + <code>git rm --cached</code>.</li>
+      <li><b>Reuse:</b> <code>lib.stable_article_id</code>, <code>lib.canonicalize_link</code>, <code>lib.public_article_link</code>, <code>intel_db.replace_article_extraction</code>, <code>intel_db.claim_id_for</code>, <code>prepare_interpretive_inputs.corpus_items</code>, <code>fetch_substack_rss.parse_rss_items</code>/<code>is_truncated</code>, <code>synthesis_corpus.load_articles_from_db</code>.</li>
+    </ul>
+  </div>
+
+  <footer>
+    Source of truth: <code>docs/plans/db-native-ingest-plan.md</code> (authoritative ultra-plan).<br>
+    Generated view · build + verification checklists persist in your browser · palette: color-mockup #7 (Claude ivory + clay).
+  </footer>
+</div>
+
+<script>
+(function(){
+  var KEY = 'dbni-progress-v2';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('.phase input[type=checkbox]'));
+  var saved;
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e){ saved = {}; }
+
+  function load(){
+    boxes.forEach(function(b){
+      if (Object.prototype.hasOwnProperty.call(saved, b.id)) b.checked = !!saved[b.id];
+      else b.checked = b.dataset.default === '1';
+    });
+  }
+  function persist(){
+    var o = {}; boxes.forEach(function(b){ o[b.id] = b.checked; });
+    saved = o;
+    try { localStorage.setItem(KEY, JSON.stringify(o)); } catch(e){}
+  }
+  function pct(d,t){ return t ? Math.round(d*100/t) : 0; }
+
+  function render(){
+    var allDone = 0;
+    document.querySelectorAll('.phase').forEach(function(ph){
+      var bs = Array.prototype.slice.call(ph.querySelectorAll('input[type=checkbox]'));
+      var done = bs.filter(function(b){ return b.checked; }).length;
+      allDone += done;
+      ph.querySelector('.pbar>i').style.width = pct(done, bs.length) + '%';
+      ph.querySelector('.pcount').textContent = done + '/' + bs.length;
+      bs.forEach(function(b){ b.closest('li').classList.toggle('checked', b.checked); });
+    });
+    var p = pct(allDone, boxes.length);
+    document.getElementById('ovbar').style.width = p + '%';
+    document.getElementById('ovpct').textContent = p + '%';
+  }
+
+  boxes.forEach(function(b){ b.addEventListener('change', function(){ persist(); render(); }); });
+
+  document.querySelectorAll('.phead').forEach(function(h){
+    h.addEventListener('click', function(){ h.parentElement.classList.toggle('collapsed'); });
+  });
+
+  document.getElementById('expandBtn').addEventListener('click', function(){
+    var anyCollapsed = document.querySelector('.phase.collapsed');
+    document.querySelectorAll('.phase').forEach(function(ph){
+      ph.classList.toggle('collapsed', !anyCollapsed);
+    });
+    this.textContent = anyCollapsed ? 'Collapse all' : 'Expand all';
+  });
+  document.getElementById('resetBtn').addEventListener('click', function(){
+    if (!confirm('Reset all progress to defaults?')) return;
+    try { localStorage.removeItem(KEY); } catch(e){}
+    saved = {}; load(); render();
+  });
+  document.getElementById('expBtn').addEventListener('click', function(){
+    var json = JSON.stringify(saved);
+    if (navigator.clipboard) navigator.clipboard.writeText(json);
+    window.prompt('Progress JSON (copy / paste into a handover):', json);
+  });
+  document.getElementById('impBtn').addEventListener('click', function(){
+    var json = window.prompt('Paste progress JSON to restore:');
+    if (!json) return;
+    try { saved = JSON.parse(json); localStorage.setItem(KEY, json); load(); render(); }
+    catch(e){ alert('Invalid JSON.'); }
+  });
+
+  load(); render();
+})();
+</script>
+</body>
+</html>
